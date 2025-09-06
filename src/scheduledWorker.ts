@@ -11,9 +11,9 @@ export async function handleScheduled(env: Env): Promise<void> {
   console.log("Running scheduled follow-up email check...");
 
   try {
-    // Calculate the timestamp for 10 minutes ago
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-    
+    // Calculate the timestamp for 20 minutes ago
+    const twentyMinutesAgo = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+
     // Find students who:
     // 1. Have status 'pending'
     // 2. Were created more than 10 minutes ago
@@ -27,7 +27,7 @@ export async function handleScheduled(env: Env): Promise<void> {
         AND s.createdAt <= ?
         AND fe.id IS NULL
       `)
-      .bind(tenMinutesAgo)
+      .bind(twentyMinutesAgo)
       .all();
 
     if (!pendingStudents.results || pendingStudents.results.length === 0) {
