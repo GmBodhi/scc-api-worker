@@ -7,9 +7,13 @@
 	"name": "ticket",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-09-04",
+	"routes": [{
+		"pattern": "api.sctcoding.club",
+		"custom_domain": true
+	}],
 	"observability": {
 		"enabled": true
-	}
+	},
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -25,7 +29,16 @@
 	 * Environment Variables
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 	 */
-	// "vars": { "MY_VARIABLE": "production_value" }
+	"d1_databases": [
+		{
+			"binding": "db",
+			"database_name": "scc_treasure_hunt_registrations",
+			"database_id": "2385940a-680d-4494-9218-ca28231b9af4"
+		}
+	],
+	"triggers": {
+		"crons": ["*/30 * * * *"]
+	}
 	/**
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/

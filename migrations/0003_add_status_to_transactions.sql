@@ -1,0 +1,1 @@
+ALTER TABLE transactions ADD COLUMN status TEXT NOT NULL CHECK (status IN ('unused', 'used')) DEFAULT 'unused';
