@@ -1,6 +1,7 @@
 import { OpenAPIRoute } from "chanfana";
 import { type AppContext, LinkTransactionRequest, LinkTransactionResponse } from "../types";
 import { EmailService } from "../services/emailService";
+import { GoogleSheetsService } from "../services/googleSheetsService";
 
 export class LinkTransaction extends OpenAPIRoute {
   schema = {
@@ -104,6 +105,26 @@ export class LinkTransaction extends OpenAPIRoute {
       } catch (emailError) {
         console.error("Error sending payment confirmation email:", emailError);
         // Don't fail the transaction linking if email fails
+      }
+
+      // Update Google Sheets with payment status
+      try {
+        const googleSheetsService = new GoogleSheetsService({
+          spreadsheetId: c.env.GOOGLE_SHEETS_ID,
+          serviceAccountEmail: c.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+          privateKey: c.env.GOOGLE_PRIVATE_KEY,
+        });
+
+        const sheetsUpdated = await googleSheetsService.updateStudentStatus(studentId, 'paid', refId);
+
+        if (!sheetsUpdated) {
+          console.error(`Failed to update student ${studentId} status in Google Sheets`);
+        } else {
+          console.log(`Student ${studentId} status updated to 'paid' in Google Sheets`);
+        }
+      } catch (sheetsError) {
+        console.error("Error updating Google Sheets:", sheetsError);
+        // Don't fail the transaction linking if Google Sheets update fails
       }
 
       return c.json({ 

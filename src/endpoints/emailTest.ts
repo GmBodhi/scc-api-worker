@@ -48,8 +48,8 @@ export class EmailTest extends OpenAPIRoute {
     
     try {
 
-      const email = 'haharshannair@gmail.com',
-        name = 'Harshan';
+      const email = 'abijithkottiyam@gmail.com',
+        name = 'Abhi naya';
       
       await emailService.sendFollowUpEmail(name, email);
       await emailService.sendPaymentConfirmationEmail(name, email, "STU_TEST123", "TXN_TEST123");

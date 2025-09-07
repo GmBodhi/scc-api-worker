@@ -64,6 +64,14 @@ export class VerifyStudent extends OpenAPIRoute {
           upiRef: matchingStudentResult.upiRef,
         };
 
+        if (matchingStudentResult.status === 'paid') {
+          return c.json({
+            success: false,
+            message: "Student is already verified and paid",
+            student: studentData
+          }, 400);
+        }
+
         return c.json({ 
           success: true, 
           message: "Student verified successfully",

@@ -1,6 +1,6 @@
 import { OpenAPIRoute } from "chanfana";
 import { type AppContext, StudentRegistration, StudentResponse } from "../types";
-import { ca } from "zod/v4/locales";
+import { GoogleSheetsService } from "../services/googleSheetsService";
 
 export class StudentCreate extends OpenAPIRoute {
   schema = {
@@ -71,6 +71,36 @@ export class StudentCreate extends OpenAPIRoute {
       if ('error' in res) {
         console.error("Database error:", res.details);
         return c.json({ error: "The email or phone number is already in use" }, 400);
+      }
+
+      // Update Google Sheets
+      try {
+        const googleSheetsService = new GoogleSheetsService({
+          spreadsheetId: c.env.GOOGLE_SHEETS_ID,
+          serviceAccountEmail: c.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+          privateKey: c.env.GOOGLE_PRIVATE_KEY,
+        });
+
+        const sheetsUpdated = await googleSheetsService.addStudentRegistration({
+          id: student.id,
+          name: student.name,
+          batch: student.batch,
+          email: student.email,
+          phoneNumber: student.phoneNumber,
+          status: student.status,
+          upiRef: student.upiRef,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+
+        if (!sheetsUpdated) {
+          console.error(`Failed to add student ${student.id} to Google Sheets`);
+        } else {
+          console.log(`Student ${student.id} added to Google Sheets successfully`);
+        }
+      } catch (sheetsError) {
+        console.error("Error updating Google Sheets:", sheetsError);
+        // Don't fail the registration if Google Sheets update fails
       }
       
       console.log("Student registration:", student, res);
