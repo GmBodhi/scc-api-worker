@@ -1,80 +1,95 @@
 interface FollowUpEmailVariables {
   studentName: string;
+  studentId: string;
 }
 
 export const followUpEmailTemplate = (variables: FollowUpEmailVariables): string => {
-  const { studentName } = variables;
+  const { studentName, studentId } = variables;
+  const link =
+    "https://sctcoding.club/forms/treasurehunt/verify-payment?id=" + studentId; // Replace with actual link
   
-  return `<!DOCTYPE html>
-<html>
+  return `<html>
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Reminder</title>
+    <title>Payment Reminder - Coding Club</title>
   </head>
-  <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
-    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-      <!-- Header -->
-      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;">
-        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 1px;">Payment Reminder</h1>
-        <p style="color: #e8e8e8; margin: 10px 0 0 0; font-size: 16px;">Complete Your Registration</p>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #ffffff;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+      
+      <div style="text-align: center; padding: 30px 0; border-bottom: 1px solid #f0f0f0;">
+        <div style="margin-bottom: 15px;">
+          <img src="logo.png" alt="Coding Club Logo" style="width: 60px; height: 60px; display: block; margin: 0 auto;" />
+        </div>
+        
+        <h1 style="color: #333; margin: 0 0 5px 0; font-size: 24px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">Coding Club</h1>
+        <p style="color: #999; margin: 0; font-size: 14px; font-weight: 400;">Payment Reminder</p>
       </div>
       
-      <!-- Content -->
       <div style="padding: 40px 30px;">
-        <h2 style="color: #2c3e50; margin: 0 0 20px 0; font-size: 24px; font-weight: 400;">Hello ${studentName}! 👋</h2>
+        <h2 style="color: #333; margin: 0 0 30px 0; font-size: 28px; font-weight: 600; text-align: center;">
+          Hello <span style="color: #EA4C4C;">${studentName}</span>!
+        </h2>
         
-        <p style="font-size: 16px; margin-bottom: 25px; color: #555;">
-          We noticed that your registration is still pending payment. Don't worry – completing your payment is quick and easy!
+        <p style="font-size: 16px; margin-bottom: 30px; color: #666; line-height: 1.6; text-align: center;">
+          We noticed that your registration is still pending payment. Complete your registration to join the best club of SCTCE!
         </p>
         
-        <!-- Action Box -->
-        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 12px; padding: 30px; margin: 30px 0; text-align: center; color: #ffffff;">
-          <h3 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 500;">Ready to Complete Your Registration?</h3>
-          <p style="margin: 0 0 25px 0; opacity: 0.9; font-size: 16px;">Click the button below to verify your payment and secure your spot</p>
+        <div style="text-align: center; margin: 40px 0;">
+          <h3 style="margin: 0 0 20px 0; font-size: 20px; font-weight: 500; color: #333;">Complete Your Registration</h3>
           
-          <!-- Button -->
-          <a href="link" style="display: inline-block; background-color: #ffffff; color: #f5576c; padding: 15px 35px; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 16px; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;">
-            ✨ Verify Payment Now
+          <a href="${link}" style="display: inline-block; background-color: #EA4C4C; color: #ffffff; padding: 15px 35px; text-decoration: none; border-radius: 25px; font-weight: 500; font-size: 16px; margin: 10px 0;">
+            Verify Payment Now
           </a>
         </div>
         
-        <!-- Alternative Link -->
-        <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center;">
+        <div style="background-color: #f9f9f9; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
           <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">
-            Button not working? Copy and paste this link into your browser:
+            Button not working? Copy this link:
           </p>
-          <p style="margin: 0; word-break: break-all; font-family: 'Courier New', monospace; font-size: 14px; color: #007bff; background-color: #fff; padding: 10px; border-radius: 4px; border: 1px solid #e9ecef;">
-            link
+          <p style="margin: 0; word-break: break-all; font-family: monospace; font-size: 13px; color: #EA4C4C;">
+            ${link}
           </p>
         </div>
         
-        <!-- Steps -->
-        <div style="background-color: #fff8e1; border-radius: 8px; padding: 25px; margin: 30px 0;">
-          <h4 style="margin: 0 0 15px 0; color: #f57f17; font-size: 18px;">📋 Simple Steps to Complete:</h4>
-          <ol style="margin: 0; padding-left: 20px; color: #555;">
-            <li style="margin-bottom: 8px;">Complete your payment (if not done already)</li>
-            <li style="margin-bottom: 8px;">Enter your transaction ID</li>
-            <li style="margin-bottom: 8px;">Submit for verification</li>
-          </ol>
+        <div style="margin: 40px 0; text-align: center;">
+          <h4 style="margin: 0 0 25px 0; color: #333; font-size: 18px; font-weight: 500;">Simple Steps</h4>
+          
+          <div style="display: flex; justify-content: space-between; max-width: 400px; margin: 0 auto; flex-wrap: wrap; gap: 20px;">
+            <div style="flex: 1; min-width: 100px; text-align: center;">
+              <div style="background-color: #EA4C4C; color: white; width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; font-size: 14px; font-weight: 600; line-height: 30px; text-align: center;">1</div>
+              <p style="margin: 0; font-size: 13px; color: #666;">Complete Payment</p>
+            </div>
+            <div style="flex: 1; min-width: 100px; text-align: center;">
+              <div style="background-color: #EA4C4C; color: white; width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; font-size: 14px; font-weight: 600; line-height: 30px; text-align: center;">2</div>
+              <p style="margin: 0; font-size: 13px; color: #666;">Enter Transaction ID</p>
+            </div>
+            <div style="flex: 1; min-width: 100px; text-align: center;">
+              <div style="background-color: #EA4C4C; color: white; width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; font-size: 14px; font-weight: 600; line-height: 30px; text-align: center;">3</div>
+              <p style="margin: 0; font-size: 13px; color: #666;">Submit & Verify</p>
+            </div>
+          </div>
         </div>
         
-        <p style="font-size: 16px; margin-top: 30px; color: #555;">
-          Already completed your payment? Great! Please contact our support team with your transaction details, and we'll get you sorted right away.
-        </p>
+        <!-- Support Note -->
+        <div style="border-left: 3px solid #EA4C4C; padding-left: 15px; margin: 30px 0;">
+          <p style="margin: 0; font-size: 15px; color: #666; line-height: 1.5;">
+            <strong style="color: #333;">Already paid?</strong> Contact our support team with your transaction details for immediate verification.
+          </p>
+        </div>
         
         <!-- Footer -->
-        <div style="margin-top: 40px; padding-top: 25px; border-top: 2px solid #f0f0f0;">
-          <p style="margin: 0; color: #666; font-size: 16px;">
+        <div style="margin-top: 50px; text-align: center; border-top: 1px solid #f0f0f0; padding-top: 25px;">
+          <p style="margin: 0; color: #333; font-size: 16px;">
             <strong>Best regards,</strong><br>
-            <span style="color: #667eea; font-weight: 500;">Registration Team</span>
+            <span style="color: #EA4C4C; font-weight: 500;">The Coding Club Team</span>
           </p>
         </div>
       </div>
       
-      <!-- Footer -->
-      <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
-        <p style="margin: 0; color: #888; font-size: 12px;">
+      <!-- Bottom Footer -->
+      <div style="background-color: #f9f9f9; padding: 20px; text-align: center; margin-top: 20px;">
+        <p style="margin: 0; color: #999; font-size: 12px;">
           This is an automated reminder. Please do not reply to this email.
         </p>
       </div>

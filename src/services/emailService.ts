@@ -14,8 +14,8 @@ export class EmailService {
     this.apiKey = apiKey;
   }
 
-  async sendFollowUpEmail(studentName: string, studentEmail: string): Promise<boolean> {
-    const html = getFollowUpEmail({ studentName });
+  async sendFollowUpEmail(studentName: string, studentEmail: string, studentId: string): Promise<boolean> {
+    const html = getFollowUpEmail({ studentName, studentId });
 
     return this.sendEmail({
       to: studentEmail,

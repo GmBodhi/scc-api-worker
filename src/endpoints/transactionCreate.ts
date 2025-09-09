@@ -33,21 +33,23 @@ export class TransactionCreate extends OpenAPIRoute {
 
     const extracted = parseTransaction(rawTxn);
 
-   const res = await c.env.db
-     .prepare(
-       "INSERT INTO transactions(id, vpa, amount, date, ref, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-     )
-     .bind(
-       Math.random().toString(36).substring(2, 10).toUpperCase(),
-       extracted.vpa,
-       extracted.amount,
-       extracted.date,
-       extracted.upiRef,
-       'unused',
-       new Date().toISOString(),
-       new Date().toISOString()
-     )
-     .run();
+    if (!extracted || extracted.amount !== 50) return c.status(400);
+
+    const res = await c.env.db
+      .prepare(
+        "INSERT INTO transactions(id, vpa, amount, date, ref, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .bind(
+        Math.random().toString(36).substring(2, 10).toUpperCase(),
+        extracted.vpa,
+        extracted.amount,
+        extracted.date,
+        extracted.upiRef,
+        "unused",
+        new Date().toISOString(),
+        new Date().toISOString()
+      )
+      .run();
 
     console.log(extracted, res);
 

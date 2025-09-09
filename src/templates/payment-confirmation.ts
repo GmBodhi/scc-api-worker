@@ -7,77 +7,119 @@ interface PaymentConfirmationVariables {
 export const paymentConfirmationTemplate = (variables: PaymentConfirmationVariables): string => {
   const { studentName, studentId, transactionRef } = variables;
   
-  return `<html>
-  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="text-align: center; margin-bottom: 30px;">
-        <h2 style="color: #28a745; margin: 0;">🎉 Payment Confirmed!</h2>
-        <p style="color: #666; margin: 5px 0 0 0;">Your registration is now complete</p>
-      </div>
+  return `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Confirmed - Coding Club</title>
+    <meta http-equiv="Content-Type" content="text/html charset=UTF-8" />
+  </head>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #ffffff;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
       
-      <p>Dear ${studentName},</p>
-      
-      <p>Great news! Your payment has been successfully verified and your registration is now confirmed.</p>
-      
-      <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px; padding: 20px; margin: 20px 0;">
-        <h4 style="margin: 0 0 15px 0; color: #155724;">Registration Details</h4>
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr>
-            <td style="padding: 8px 0; border-bottom: 1px solid #c3e6cb; font-weight: bold;">Student ID:</td>
-            <td style="padding: 8px 0; border-bottom: 1px solid #c3e6cb;">${studentId}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 0; border-bottom: 1px solid #c3e6cb; font-weight: bold;">Transaction Reference:</td>
-            <td style="padding: 8px 0; border-bottom: 1px solid #c3e6cb;">${transactionRef}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 0; font-weight: bold;">Status:</td>
-            <td style="padding: 8px 0; color: #28a745; font-weight: bold;">✅ PAID & CONFIRMED</td>
-          </tr>
-        </table>
-      </div>
-
-      <div style="background-color: #f8f9fa; border: 2px solid #007bff; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
-        <h4 style="margin: 0 0 15px 0; color: #007bff;">📱 Your Event Ticket</h4>
-        <div style="background-color: white; padding: 20px; border-radius: 6px; margin: 10px 0;">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${studentId}" 
-               alt="QR Code for verification" 
-               style="display: block; margin: 0 auto; width: 200px; height: 200px;" />
-          <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">Show this QR code at the venue for verification</p>
+      <!-- Header -->
+      <div style="text-align: center; padding: 30px 0; border-bottom: 1px solid #f0f0f0;">
+        <!-- Coding Club Logo -->
+        <div style="margin-bottom: 15px;">
+          <img src="https://sctcoding.club/lovable-uploads/64cbe490-b3f4-4d17-a932-fe078c51142f.png" alt="Coding Club Logo" style="width: 60px; height: 60px; display: block; margin: 0 auto; border-radius: 10%;">
         </div>
-        <p style="margin: 10px 0 0 0; font-weight: bold; color: #007bff;">Student ID: ${studentId}</p>
+        
+        <h1 style="color: #333; margin: 0 0 5px 0; font-size: 24px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">Coding Club</h1>
+        <p style="color: #28a745; margin: 0; font-size: 16px; font-weight: 500;">🎉 Payment Confirmed!</p>
       </div>
       
-      <div style="background-color: #f8f9fa; border-left: 4px solid #007bff; padding: 20px; margin: 20px 0;">
-        <h4 style="margin: 0 0 15px 0; color: #007bff;">Event Information</h4>
-        <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
-          <li><strong>Event Name:</strong> SCC Treasure Hunt 2025</li>
-          <li><strong>Date:</strong> 21 September 2025</li>
-          <li><strong>Time:</strong> 9:30 AM</li>
-          <li><strong>Venue:</strong> 112 Seminar Hall, SCT</li>
-          <li><strong>Registration Fee:</strong> Successfully Paid ✅</li>
-        </ul>
+      <!-- Content -->
+      <div style="padding: 40px 30px;">
+        <h2 style="color: #333; margin: 0 0 30px 0; font-size: 28px; font-weight: 600; text-align: center;">
+          Welcome <span style="color: #EA4C4C;">${studentName}</span>!
+        </h2>
+        
+        <p style="font-size: 16px; margin-bottom: 30px; color: #666; line-height: 1.6; text-align: center;">
+          Great news! Your payment has been successfully verified and your registration is now confirmed.
+        </p>
+        
+        <!-- Registration Details -->
+        <div style="background-color: #f9f9f9; border-radius: 8px; padding: 25px; margin: 30px 0;">
+          <h3 style="margin: 0 0 20px 0; color: #333; font-size: 18px; font-weight: 500;">Registration Details</h3>
+          
+          <div style="border-left: 3px solid #EA4C4C; padding-left: 15px;">
+            <div style="margin-bottom: 15px;">
+              <strong style="color: #333;">Student ID:</strong>
+              <span style="color: #666; margin-left: 10px;">${studentId}</span>
+            </div>
+            <div style="margin-bottom: 15px;">
+              <strong style="color: #333;">Transaction Reference:</strong>
+              <span style="color: #666; margin-left: 10px;">${transactionRef}</span>
+            </div>
+            <div>
+              <strong style="color: #333;">Status:</strong>
+              <span style="color: #28a745; margin-left: 10px; font-weight: 500;">✅ PAID & CONFIRMED</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- QR Code Section -->
+        <div style="background-color: #f9f9f9; border: 2px solid #EA4C4C; border-radius: 8px; padding: 25px; margin: 30px 0; text-align: center;">
+          <h3 style="margin: 0 0 20px 0; color: #EA4C4C; font-size: 18px; font-weight: 500;">📱 Your Event Ticket</h3>
+          
+          <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 15px 0;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${studentId}" 
+                 alt="QR Code for verification" 
+                 style="display: block; margin: 0 auto; width: 200px; height: 200px; border: 1px solid #f0f0f0; border-radius: 4px;" />
+            <p style="margin: 15px 0 0 0; font-size: 14px; color: #666;">Show this QR code at the venue for verification</p>
+          </div>
+          
+          <p style="margin: 10px 0 0 0; font-weight: 500; color: #EA4C4C;">Student ID: ${studentId}</p>
+        </div>
+        
+        <!-- Event Information -->
+        <div style="border-left: 3px solid #EA4C4C; padding-left: 15px; margin: 30px 0;">
+          <h3 style="margin: 0 0 20px 0; color: #333; font-size: 18px; font-weight: 500;">Event Information</h3>
+          
+          <div style="color: #666; line-height: 1.8;">
+            <div style="margin-bottom: 8px;"><strong style="color: #333;">Event Name:</strong> SCC Treasure Hunt 2025</div>
+            <div style="margin-bottom: 8px;"><strong style="color: #333;">Date:</strong> 21 September 2025</div>
+            <div style="margin-bottom: 8px;"><strong style="color: #333;">Time:</strong> 9:30 AM</div>
+            <div style="margin-bottom: 8px;"><strong style="color: #333;">Venue:</strong> 112 Seminar Hall, SCT</div>
+            <div><strong style="color: #333;">Registration Fee:</strong> <span style="color: #28a745; font-weight: 500;">Successfully Paid ✅</span></div>
+          </div>
+        </div>
+        
+        <!-- Important Instructions -->
+        <div style="background-color: #fff8e1; border-radius: 8px; padding: 20px; margin: 30px 0;">
+          <h3 style="margin: 0 0 15px 0; color: #EA4C4C; font-size: 18px; font-weight: 500;">📋 Important Instructions</h3>
+          
+          <div style="color: #666; line-height: 1.7;">
+            <div style="margin-bottom: 8px;">• Save this email or take a screenshot of your QR code</div>
+            <div style="margin-bottom: 8px;">• Arrive at the venue 15 minutes before the event starts</div>
+            <div style="margin-bottom: 8px;">• Show your QR code to event staff for verification</div>
+            <div style="margin-bottom: 8px;">• Bring a valid ID for additional verification if needed</div>
+            <div style="margin-bottom: 8px;">• Keep your Student ID handy: <strong style="color: #333;">${studentId}</strong></div>
+            <div>• Check your email regularly for any event updates</div>
+          </div>
+        </div>
+        
+        <p style="font-size: 16px; color: #666; line-height: 1.6; text-align: center; margin: 30px 0;">
+          If you have any questions or need assistance, please contact our support team with your Student ID.
+        </p>
+        
+        <!-- Footer -->
+        <div style="margin-top: 50px; text-align: center; border-top: 1px solid #f0f0f0; padding-top: 25px;">
+          <p style="margin: 0; color: #333; font-size: 16px;">
+            <strong>Best regards,</strong><br>
+            <span style="color: #EA4C4C; font-weight: 500;">SCC Event Team</span><br>
+            <span style="color: #999; font-size: 14px;">Registration & Support</span>
+          </p>
+        </div>
       </div>
       
-      <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 15px; margin: 20px 0;">
-        <h4 style="margin: 0 0 10px 0; color: #856404;">📋 Important Instructions</h4>
-        <ul style="margin: 0; padding-left: 20px; color: #856404;">
-          <li>Save this email or take a screenshot of your QR code</li>
-          <li>Arrive at the venue 15 minutes before the event starts</li>
-          <li>Show your QR code to event staff for verification</li>
-          <li>Bring a valid ID for additional verification if needed</li>
-          <li>Keep your Student ID handy: <strong>${studentId}</strong></li>
-          <li>Check your email regularly for any event updates</li>
-        </ul>
+      <!-- Bottom Footer -->
+      <div style="background-color: #f9f9f9; padding: 20px; text-align: center; margin-top: 20px;">
+        <p style="margin: 0; color: #999; font-size: 12px;">
+          This is an automated confirmation. Please save this email for your records.
+        </p>
       </div>
-      
-      <p>If you have any questions or need assistance, please contact our support team with your Student ID.</p>
-      
-      <p style="margin-top: 30px;">
-        Best regards,<br>
-        <strong>SCC Event Team</strong><br>
-        Registration & Support
-      </p>
     </div>
   </body>
 </html>`;

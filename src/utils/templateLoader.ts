@@ -1,7 +1,7 @@
 import { followUpEmailTemplate } from '../templates/followup-email';
 import { paymentConfirmationTemplate } from '../templates/payment-confirmation';
 
-export function getFollowUpEmail(variables: { studentName: string }): string {
+export function getFollowUpEmail(variables: { studentName: string; studentId: string }): string {
   return followUpEmailTemplate(variables);
 }
 
