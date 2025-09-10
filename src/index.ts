@@ -15,6 +15,9 @@ const app = new Hono<{ Bindings: Env }>();
 app.use(cors());
 
 const openapi = fromHono(app, {  
+  docs_url: null,
+  openapi_url: null,
+  redoc_url: null,
 });
 
 openapi.post("/api/transaction", TransactionCreate);
