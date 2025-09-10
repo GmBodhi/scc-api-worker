@@ -1,6 +1,6 @@
 import { OpenAPIRoute } from "chanfana";
 import { type AppContext, RawTransaction } from "../types";
-import { parseTransaction } from "../services/transaction";
+import { parseTransactionHDFC } from "../services/transaction";
 
 export class TransactionCreate extends OpenAPIRoute {
   schema = {
@@ -31,7 +31,7 @@ export class TransactionCreate extends OpenAPIRoute {
 
     if (auth != c.env.TOKEN) return c.status(404);
 
-    const extracted = parseTransaction(rawTxn);
+    const extracted = parseTransactionHDFC(rawTxn);
 
     if (!extracted || extracted.amount !== 50) return c.status(400);
 

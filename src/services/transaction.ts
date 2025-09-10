@@ -13,3 +13,19 @@ export function parseTransaction(data: string) {
 
     return null;
 }
+
+export function parseTransactionHDFC(data: string) {
+const regex = /Rs\.(\d+\.\d+) credited to HDFC Bank A\/c XX\d+ on (\d{2}-\d{2}-\d{2}) from VPA ([\w\-@.]+) \(UPI (\d+)\)/;
+const match = data.match(regex);
+
+  if (match) {
+    return {
+      amount: parseFloat(match[1]),
+      date: match[2],
+      vpa: match[3],
+      upiRef: match[4],
+    };
+  }
+
+  return null;
+}
