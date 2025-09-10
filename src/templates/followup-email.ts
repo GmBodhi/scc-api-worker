@@ -90,7 +90,7 @@ export const followUpEmailTemplate = (variables: FollowUpEmailVariables): string
       <!-- Bottom Footer -->
       <div style="background-color: #f9f9f9; padding: 20px; text-align: center; margin-top: 20px;">
         <p style="margin: 0; color: #999; font-size: 12px;">
-          This is an automated reminder. Please do not reply to this email.
+          This is an automated reminder. Please reply to this email if you have any questions.
         </p>
       </div>
     </div>

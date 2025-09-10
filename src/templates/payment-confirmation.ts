@@ -115,7 +115,7 @@ export const paymentConfirmationTemplate = (variables: PaymentConfirmationVariab
       <!-- Bottom Footer -->
       <div style="background-color: #f9f9f9; padding: 20px; text-align: center; margin-top: 20px;">
         <p style="margin: 0; color: #999; font-size: 12px;">
-          This is an automated confirmation. Please save this email for your records.
+          This is an automated confirmation. Please reply to this email if you have any questions.
         </p>
       </div>
     </div>
