@@ -19,7 +19,7 @@ export const followUpEmailTemplate = (variables: FollowUpEmailVariables): string
       
       <div style="text-align: center; padding: 30px 0; border-bottom: 1px solid #f0f0f0;">
         <div style="margin-bottom: 15px;">
-          <img src="logo.png" alt="Coding Club Logo" style="width: 60px; height: 60px; display: block; margin: 0 auto;" />
+          <img src="https://sctcoding.club/lovable-uploads/64cbe490-b3f4-4d17-a932-fe078c51142f.png" alt="Coding Club Logo" style="width: 60px; height: 60px; display: block; margin: 0 auto;" />
         </div>
         
         <h1 style="color: #333; margin: 0 0 5px 0; font-size: 24px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">Coding Club</h1>
@@ -55,20 +55,22 @@ export const followUpEmailTemplate = (variables: FollowUpEmailVariables): string
         <div style="margin: 40px 0; text-align: center;">
           <h4 style="margin: 0 0 25px 0; color: #333; font-size: 18px; font-weight: 500;">Simple Steps</h4>
           
-          <div style="display: flex; justify-content: space-between; max-width: 400px; margin: 0 auto; flex-wrap: wrap; gap: 20px;">
-            <div style="flex: 1; min-width: 100px; text-align: center;">
-              <div style="background-color: #EA4C4C; color: white; width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; font-size: 14px; font-weight: 600; line-height: 30px; text-align: center;">1</div>
-              <p style="margin: 0; font-size: 13px; color: #666;">Complete Payment</p>
-            </div>
-            <div style="flex: 1; min-width: 100px; text-align: center;">
-              <div style="background-color: #EA4C4C; color: white; width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; font-size: 14px; font-weight: 600; line-height: 30px; text-align: center;">2</div>
-              <p style="margin: 0; font-size: 13px; color: #666;">Enter Transaction ID</p>
-            </div>
-            <div style="flex: 1; min-width: 100px; text-align: center;">
-              <div style="background-color: #EA4C4C; color: white; width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; font-size: 14px; font-weight: 600; line-height: 30px; text-align: center;">3</div>
-              <p style="margin: 0; font-size: 13px; color: #666;">Submit & Verify</p>
-            </div>
-          </div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 400px; margin: 0 auto;">
+            <tr>
+              <td align="center" style="width: 33.33%; min-width: 100px; padding: 0 10px;">
+                <div style="background-color: #EA4C4C; color: white; width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; font-size: 14px; font-weight: 600; line-height: 30px; text-align: center;">1</div>
+                <p style="margin: 0; font-size: 13px; color: #666;">Complete Payment</p>
+              </td>
+              <td align="center" style="width: 33.33%; min-width: 100px; padding: 0 10px;">
+                <div style="background-color: #EA4C4C; color: white; width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; font-size: 14px; font-weight: 600; line-height: 30px; text-align: center;">2</div>
+                <p style="margin: 0; font-size: 13px; color: #666;">Enter Transaction ID</p>
+              </td>
+              <td align="center" style="width: 33.33%; min-width: 100px; padding: 0 10px;">
+                <div style="background-color: #EA4C4C; color: white; width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; font-size: 14px; font-weight: 600; line-height: 30px; text-align: center;">3</div>
+                <p style="margin: 0; font-size: 13px; color: #666;">Submit & Verify</p>
+              </td>
+            </tr>
+          </table>
         </div>
         
         <!-- Support Note -->
