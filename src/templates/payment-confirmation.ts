@@ -94,8 +94,6 @@ export const paymentConfirmationTemplate = (variables: PaymentConfirmationVariab
             <div style="margin-bottom: 8px;">• Save this email or take a screenshot of your QR code</div>
             <div style="margin-bottom: 8px;">• Arrive at the venue 15 minutes before the event starts</div>
             <div style="margin-bottom: 8px;">• Show your QR code to event staff for verification</div>
-            <div style="margin-bottom: 8px;">• Bring a valid ID for additional verification if needed</div>
-            <div style="margin-bottom: 8px;">• Keep your Student ID handy: <strong style="color: #333;">${studentId}</strong></div>
             <div>• Check your email regularly for any event updates</div>
           </div>
         </div>
