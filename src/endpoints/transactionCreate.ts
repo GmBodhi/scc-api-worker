@@ -29,11 +29,17 @@ export class TransactionCreate extends OpenAPIRoute {
 
     const auth = c.req.header("authorization");
 
-    if (auth != c.env.TOKEN) return c.status(404);
+    if (auth != c.env.TOKEN) {
+      c.status(404);
+      return c.json({ error: "Not found" });
+    }
 
     const extracted = parseTransactionHDFC(rawTxn);
 
-    if (!extracted || extracted.amount !== 50) return c.status(400);
+    if (!extracted || extracted.amount !== 50) {
+      c.status(400);
+      return c.json({ error: "Invalid transaction data" });
+    }
 
     const res = await c.env.db
       .prepare(

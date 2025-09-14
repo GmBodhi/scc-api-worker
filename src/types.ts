@@ -48,3 +48,7 @@ export const VerifyStudentResponse = z.object({
   message: z.string(),
   student: StudentResponse.optional(),
 });
+
+export const ErrorResponse = z.object({
+  error: z.string(),
+});

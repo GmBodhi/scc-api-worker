@@ -1,5 +1,5 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext, StudentRegistration, StudentResponse } from "../types";
+import { type AppContext, StudentRegistration, StudentResponse, ErrorResponse } from "../types";
 import { GoogleSheetsService } from "../services/googleSheetsService";
 
 export class StudentCreate extends OpenAPIRoute {
@@ -24,8 +24,12 @@ export class StudentCreate extends OpenAPIRoute {
         },
       },
       "400": {
-        description: "Bad request - validation error",
-        content: {},
+        description: "Bad request - validation error or capacity exceeded",
+        content: {
+          "application/json": {
+            schema: ErrorResponse,
+          }
+        },
       },
       "404": {
         description: "Unauthorized",
@@ -38,8 +42,15 @@ export class StudentCreate extends OpenAPIRoute {
     const data = await this.getValidatedData<typeof this.schema>();
 
     try {
-      
-      
+      // Check current student count to enforce 100-person capacity limit
+      const countResult = await c.env.db
+        .prepare("SELECT COUNT(*) as count FROM students")
+        .first<{ count: number }>();
+
+      if (countResult && countResult.count >= 100) {
+        return c.json({ error: "Registration capacity exceeded. Maximum 100 students allowed." }, 400);
+      }
+
       const studentData = data.body;
       
       // Generate a unique ID (using timestamp + random string for simplicity)
@@ -69,7 +80,7 @@ export class StudentCreate extends OpenAPIRoute {
         .run().catch((e) => ({ error: true, details: e.message }));
       
       if ('error' in res) {
-        console.error("Database error:", res.details);
+        console.error("Database error:", res);
         return c.json({ error: "The email or phone number is already in use" }, 400);
       }
 
