@@ -9,6 +9,7 @@ import { EmailTest } from "./endpoints/emailTest";
 import { InitializeSheets } from "./endpoints/initializeSheets";
 import { handleScheduled } from "./scheduledWorker";
 import { cors } from "hono/cors";
+import { TransactionCheck } from "./endpoints/transactionCheck";
 
 // Start a Hono app
 const app = new Hono<{ Bindings: Env }>();
@@ -21,6 +22,8 @@ const openapi = fromHono(app, {
 });
 
 openapi.post("/api/transaction", TransactionCreate);
+openapi.post("/api/transaction-check", TransactionCheck);
+
 openapi.post("/api/student", StudentCreate);
 openapi.post("/api/link", LinkTransaction);
 openapi.get("/api/ticket/:id", TicketVerify);

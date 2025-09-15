@@ -47,8 +47,8 @@ export class StudentCreate extends OpenAPIRoute {
         .prepare("SELECT COUNT(*) as count FROM students")
         .first<{ count: number }>();
 
-      if (countResult && countResult.count >= 100) {
-        return c.json({ error: "Registration capacity exceeded. Maximum 100 students allowed." }, 400);
+      if (countResult && countResult.count >= 120) {
+        return c.json({ error: "Registration capacity exceeded. Maximum 120 students allowed." }, 400);
       }
 
       const studentData = data.body;

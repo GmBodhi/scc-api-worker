@@ -52,3 +52,16 @@ export const VerifyStudentResponse = z.object({
 export const ErrorResponse = z.object({
   error: z.string(),
 });
+
+export const TransactionCheckResponse = z.object({
+  exists: z.boolean(),
+  transaction: z.object({
+    id: z.string(),
+    vpa: z.string(),
+    amount: z.number(),
+    date: z.string(),
+    upiRef: z.string(),
+    status: z.string(),
+  }).optional(),
+  message: z.string(),
+});
