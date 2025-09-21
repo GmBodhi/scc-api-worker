@@ -6,7 +6,7 @@ import { z } from "zod";
 const RefundRequest = z.object({
   email: z.string().email("Valid email is required"),
   phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
-  reason: z.string().min(1, "Refund reason is required"),
+  reason: z.string().optional(),
   refundedBy: z.string().optional(),
 });
 
