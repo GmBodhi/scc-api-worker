@@ -29,7 +29,7 @@ openapi.post("/api/student", StudentCreate);
 openapi.post("/api/link", LinkTransaction);
 openapi.get("/api/ticket/:id", TicketVerify);
 openapi.post("/api/verify-student", VerifyStudent);
-openapi.post("/api/refund", StudentRefund);
+// openapi.post("/api/refund", StudentRefund);
 // openapi.post("/api/email-test", EmailTest);
 // openapi.post("/api/initialize-sheets", InitializeSheets);
 
