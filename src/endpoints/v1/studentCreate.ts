@@ -1,6 +1,6 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext, StudentRegistration, StudentResponse, ErrorResponse } from "../types";
-import { GoogleSheetsService } from "../services/googleSheetsService";
+import { type AppContext, StudentRegistration, StudentResponse, ErrorResponse } from "../../types";
+import { GoogleSheetsService } from "../../services/googleSheetsService";
 
 export class StudentCreate extends OpenAPIRoute {
   schema = {

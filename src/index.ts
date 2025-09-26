@@ -1,37 +1,13 @@
-import { fromHono } from "chanfana";
 import { Hono } from "hono";
-import { TransactionCreate } from "./endpoints/transactionCreate";
-import { StudentCreate } from "./endpoints/studentCreate";
-import { LinkTransaction } from "./endpoints/linkTransaction";
-import { TicketVerify } from "./endpoints/ticketVerify";
-import { VerifyStudent } from "./endpoints/verifyStudent";
-import { EmailTest } from "./endpoints/emailTest";
-import { InitializeSheets } from "./endpoints/initializeSheets";
 import { handleScheduled } from "./scheduledWorker";
 import { cors } from "hono/cors";
-import { TransactionCheck } from "./endpoints/transactionCheck";
-import { StudentRefund } from "./endpoints/studentRefund";
+import v1 from "./endpoints/v1";
 
 // Start a Hono app
 const app = new Hono<{ Bindings: Env }>();
 app.use(cors());
 
-const openapi = fromHono(app, {  
-  docs_url: null,
-  openapi_url: null,
-  redoc_url: null,
-});
-
-openapi.post("/api/transaction", TransactionCreate);
-openapi.post("/api/transaction-check", TransactionCheck);
-
-openapi.post("/api/student", StudentCreate);
-openapi.post("/api/link", LinkTransaction);
-openapi.get("/api/ticket/:id", TicketVerify);
-openapi.post("/api/verify-student", VerifyStudent);
-openapi.post("/api/refund", StudentRefund);
-// openapi.post("/api/email-test", EmailTest);
-// openapi.post("/api/initialize-sheets", InitializeSheets);
+app.route("/api/v1", v1);
 
 // Export the Worker with both HTTP and scheduled handlers
 export default {
