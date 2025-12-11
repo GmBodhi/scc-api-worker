@@ -6,7 +6,9 @@ import v2 from "./endpoints/v2";
 
 // Start a Hono app
 const app = new Hono<{ Bindings: Env }>();
-app.use(cors());
+app.use(cors({
+  origin: '*'
+}));
 
 app.route("/api/v1", v1);
 app.route("/api/v2", v2);
