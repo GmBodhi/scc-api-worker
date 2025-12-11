@@ -1,7 +1,7 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext, LinkTransactionRequest, LinkTransactionResponse } from "../types";
-import { EmailService } from "../services/emailService";
-import { GoogleSheetsService } from "../services/googleSheetsService";
+import { type AppContext, LinkTransactionRequest, LinkTransactionResponse } from "../../types";
+import { EmailService } from "../../services/emailService";
+import { GoogleSheetsService } from "../../services/googleSheetsService";
 
 export class LinkTransaction extends OpenAPIRoute {
   schema = {

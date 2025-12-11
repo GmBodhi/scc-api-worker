@@ -1,5 +1,5 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext, TicketVerificationResponse } from "../types";
+import { type AppContext, TicketVerificationResponse } from "../../types";
 import z from "zod";
 
 export class TicketVerify extends OpenAPIRoute {

@@ -16,6 +16,17 @@ interface StudentRegistrationRow {
   updatedAt: string;
 }
 
+interface MentorshipRegistrationRow {
+  id: string;
+  name: string;
+  batch: string;
+  email: string;
+  phone: string;
+  technologies: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export class GoogleSheetsService {
   private config: GoogleSheetsConfig;
 
@@ -290,6 +301,111 @@ export class GoogleSheetsService {
       return true;
     } catch (error) {
       console.error('Error initializing Google Sheets:', error);
+      return false;
+    }
+  }
+
+  async addMentorshipRegistration(mentorship: MentorshipRegistrationRow): Promise<boolean> {
+    try {
+      const accessToken = await this.getAccessToken();
+      
+      // Convert mentorship data to row format
+      const rowData = [
+        mentorship.id,
+        mentorship.name,
+        mentorship.batch,
+        mentorship.email,
+        mentorship.phone,
+        mentorship.technologies.join(', '),
+        mentorship.createdAt,
+        mentorship.updatedAt,
+      ];
+
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.config.spreadsheetId}/values/Mentorships:append?valueInputOption=RAW`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: [rowData],
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Failed to add mentorship to Google Sheets:', await response.text());
+        return false;
+      }
+
+      console.log(`Mentorship ${mentorship.id} added to Google Sheets`);
+      return true;
+    } catch (error) {
+      console.error('Error adding mentorship to Google Sheets:', error);
+      return false;
+    }
+  }
+
+  async initializeMentorshipSheet(): Promise<boolean> {
+    try {
+      const accessToken = await this.getAccessToken();
+      
+      // Add headers to the first row if they don't exist
+      const headers = [
+        'ID',
+        'Name',
+        'Batch',
+        'Email',
+        'Phone Number',
+        'Technologies',
+        'Created At',
+        'Updated At',
+      ];
+
+      // Check if headers already exist
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.config.spreadsheetId}/values/Mentorships!1:1`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json() as { values?: string[][] };
+        if (data.values && data.values[0] && data.values[0].length > 0) {
+          // Headers already exist
+          return true;
+        }
+      }
+
+      // Add headers
+      const updateResponse = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.config.spreadsheetId}/values/Mentorships!1:1?valueInputOption=RAW`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: [headers],
+          }),
+        }
+      );
+
+      if (!updateResponse.ok) {
+        console.error('Failed to initialize Mentorships Google Sheets headers:', await updateResponse.text());
+        return false;
+      }
+
+      console.log('Mentorships Google Sheets initialized with headers');
+      return true;
+    } catch (error) {
+      console.error('Error initializing Mentorships Google Sheets:', error);
       return false;
     }
   }

@@ -4,13 +4,15 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "ticket",
+	"name": "api",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-09-04",
-	"routes": [{
-		"pattern": "api.sctcoding.club",
-		"custom_domain": true
-	}],
+	"routes": [
+		{
+			"pattern": "api.sctcoding.club",
+			"custom_domain": true
+		}
+	],
 	"observability": {
 		"enabled": true
 	},
@@ -33,11 +35,14 @@
 		{
 			"binding": "db",
 			"database_name": "scc_treasure_hunt_registrations",
-			"database_id": "2385940a-680d-4494-9218-ca28231b9af4"
+			"database_id": "2e8ed049-6348-4400-9ff5-a64e447fbe3d",
+			"remote": true
 		}
 	],
 	"triggers": {
-		"crons": ["*/30 * * * *"]
+		"crons": [
+			"*/30 * * * *"
+		]
 	}
 	/**
 	 * Note: Use secrets to store sensitive data.

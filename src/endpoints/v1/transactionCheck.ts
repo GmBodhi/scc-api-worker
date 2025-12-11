@@ -1,6 +1,6 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext, RawTransaction, TransactionCheckResponse, ErrorResponse } from "../types";
-import { parseTransaction, parseTransactionHDFC } from "../services/transaction";
+import { type AppContext, RawTransaction, TransactionCheckResponse, ErrorResponse } from "../../types";
+import { parseTransaction, parseTransactionHDFC } from "../../services/transaction";
 
 export class TransactionCheck extends OpenAPIRoute {
   schema = {

@@ -2,6 +2,7 @@ import { fromHono } from "chanfana";
 import { Hono } from "hono";
 import { TransactionCreate } from "./transactionCreate";
 import { StudentCreate } from "./studentCreate";
+import { MentorshipCreate } from "./mentorshipCreate";
 import { LinkTransaction } from "./linkTransaction";
 import { TicketVerify } from "./ticketVerify";
 import { VerifyStudent } from "./verifyStudent";
@@ -22,6 +23,7 @@ openapi.post("/transaction", TransactionCreate);
 openapi.post("/transaction-check", TransactionCheck);
 
 openapi.post("/student", StudentCreate);
+openapi.post("/mentorship", MentorshipCreate);
 openapi.post("/link", LinkTransaction);
 openapi.get("/ticket/:id", TicketVerify);
 openapi.post("/verify-student", VerifyStudent);

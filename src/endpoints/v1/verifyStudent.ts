@@ -1,5 +1,5 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext, VerifyStudentRequest, VerifyStudentResponse } from "../types";
+import { type AppContext, VerifyStudentRequest, VerifyStudentResponse } from "../../types";
 
 export class VerifyStudent extends OpenAPIRoute {
   schema = {
