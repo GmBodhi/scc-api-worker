@@ -1,5 +1,6 @@
 import { fromHono } from "chanfana";
 import { Hono } from "hono";
+import { MentorshipProgramCreate } from "./mentorshipProgramCreate";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -9,6 +10,6 @@ const openapi = fromHono(app, {
   redoc_url: null,
 });
 
-
+openapi.post("/mentorship-program", MentorshipProgramCreate);
 
 export default app;

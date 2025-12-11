@@ -1,4 +1,4 @@
-import { getFollowUpEmail, getPaymentConfirmationEmail } from "../utils/templateLoader";
+import { getFollowUpEmail, getPaymentConfirmationEmail, getMentorshipProgramConfirmationEmail } from "../utils/templateLoader";
 
 interface EmailOptions {
   to: string;
@@ -36,6 +36,26 @@ export class EmailService {
       to: studentEmail,
       toName: studentName,
       subject: "🎉 Payment Confirmed - SCC Treasure Hunt Registration Complete!",
+      html
+    });
+  }
+
+  async sendMentorshipProgramConfirmationEmail(
+    studentName: string,
+    studentEmail: string,
+    studentId: string,
+    experienceLevel: string
+  ): Promise<boolean> {
+    const html = getMentorshipProgramConfirmationEmail({
+      studentName,
+      studentId,
+      experienceLevel
+    });
+
+    return this.sendEmail({
+      to: studentEmail,
+      toName: studentName,
+      subject: "🎉 Registration Confirmed - Mentorship Program 2025",
       html
     });
   }

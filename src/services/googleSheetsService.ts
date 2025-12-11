@@ -27,6 +27,19 @@ interface MentorshipRegistrationRow {
   updatedAt: string;
 }
 
+interface MentorshipProgramRegistrationRow {
+  id: string;
+  name: string;
+  batch: string;
+  email: string;
+  phone: string;
+  experienceLevel: string;
+  projectIdea: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export class GoogleSheetsService {
   private config: GoogleSheetsConfig;
 
@@ -351,7 +364,7 @@ export class GoogleSheetsService {
   async initializeMentorshipSheet(): Promise<boolean> {
     try {
       const accessToken = await this.getAccessToken();
-      
+
       // Add headers to the first row if they don't exist
       const headers = [
         'ID',
@@ -406,6 +419,115 @@ export class GoogleSheetsService {
       return true;
     } catch (error) {
       console.error('Error initializing Mentorships Google Sheets:', error);
+      return false;
+    }
+  }
+
+  async addMentorshipProgramRegistration(registration: MentorshipProgramRegistrationRow): Promise<boolean> {
+    try {
+      const accessToken = await this.getAccessToken();
+
+      // Convert registration data to row format
+      const rowData = [
+        registration.id,
+        registration.name,
+        registration.batch,
+        registration.email,
+        registration.phone,
+        registration.experienceLevel,
+        registration.projectIdea,
+        registration.status,
+        registration.createdAt,
+        registration.updatedAt,
+      ];
+
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.config.spreadsheetId}/values/MentorshipProgram:append?valueInputOption=RAW`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: [rowData],
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Failed to add mentorship program registration to Google Sheets:', await response.text());
+        return false;
+      }
+
+      console.log(`Mentorship program registration ${registration.id} added to Google Sheets`);
+      return true;
+    } catch (error) {
+      console.error('Error adding mentorship program registration to Google Sheets:', error);
+      return false;
+    }
+  }
+
+  async initializeMentorshipProgramSheet(): Promise<boolean> {
+    try {
+      const accessToken = await this.getAccessToken();
+
+      // Add headers to the first row if they don't exist
+      const headers = [
+        'ID',
+        'Name',
+        'Batch',
+        'Email',
+        'Phone Number',
+        'Experience Level',
+        'Project Idea',
+        'Status',
+        'Created At',
+        'Updated At',
+      ];
+
+      // Check if headers already exist
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.config.spreadsheetId}/values/MentorshipProgram!1:1`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json() as { values?: string[][] };
+        if (data.values && data.values[0] && data.values[0].length > 0) {
+          // Headers already exist
+          return true;
+        }
+      }
+
+      // Add headers
+      const updateResponse = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.config.spreadsheetId}/values/MentorshipProgram!1:1?valueInputOption=RAW`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: [headers],
+          }),
+        }
+      );
+
+      if (!updateResponse.ok) {
+        console.error('Failed to initialize MentorshipProgram Google Sheets headers:', await updateResponse.text());
+        return false;
+      }
+
+      console.log('MentorshipProgram Google Sheets initialized with headers');
+      return true;
+    } catch (error) {
+      console.error('Error initializing MentorshipProgram Google Sheets:', error);
       return false;
     }
   }

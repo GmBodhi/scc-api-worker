@@ -36,6 +36,22 @@ export const MentorshipResponse = MentorshipRegistration.extend({
   id: z.string(),
 });
 
+export const ExperienceLevel = z.enum(["Beginner", "Intermediate", "Advanced"]);
+
+export const MentorshipProgramRegistration = z.object({
+  name: z.string().min(1, "Name is required"),
+  batch: z.string().min(1, "Batch is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  experienceLevel: ExperienceLevel,
+  projectIdea: z.string().min(10, "Project idea must be at least 10 characters"),
+});
+
+export const MentorshipProgramResponse = MentorshipProgramRegistration.extend({
+  id: z.string(),
+  status: z.literal("registered"),
+});
+
 export const LinkTransactionRequest = z.object({
   refId: z.string().min(1, "Reference ID is required"),
   studentId: z.string().min(1, "Student ID is required"),
