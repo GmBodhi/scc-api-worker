@@ -1,6 +1,6 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext } from "../types";
-import { GoogleSheetsService } from "../services/googleSheetsService";
+import { type AppContext } from "../../types";
+import { GoogleSheetsService } from "../../services/googleSheetsService";
 import { z } from "zod";
 
 const InitializeResponse = z.object({
@@ -39,7 +39,7 @@ export class InitializeSheets extends OpenAPIRoute {
         privateKey: c.env.GOOGLE_PRIVATE_KEY,
       });
 
-      const initialized = await googleSheetsService.initializeSheet();
+      const initialized = await googleSheetsService.initializeMentorshipProgramSheet();
 
       if (initialized) {
         return c.json({
