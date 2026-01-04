@@ -87,7 +87,13 @@ export class GoogleSheetsService {
       new TextEncoder().encode(unsignedToken)
     );
 
-    const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)))
+    // Convert signature to base64url safely (avoid spread operator on large arrays)
+    let binaryString = '';
+    const signatureBytes = new Uint8Array(signature);
+    for (let i = 0; i < signatureBytes.length; i++) {
+      binaryString += String.fromCharCode(signatureBytes[i]);
+    }
+    const encodedSignature = btoa(binaryString)
       .replace(/[+/=]/g, (m) => ({'+': '-', '/': '_', '=': ''}[m] || ''));
 
     const jwt = `${unsignedToken}.${encodedSignature}`;
