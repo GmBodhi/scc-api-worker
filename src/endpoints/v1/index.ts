@@ -29,6 +29,6 @@ openapi.get("/ticket/:id", TicketVerify);
 openapi.post("/verify-student", VerifyStudent);
 // openapi.post("/refund", StudentRefund);
 // openapi.post("/email-test", EmailTest);
-// openapi.post("/initialize-sheets", InitializeSheets);
+openapi.post("/initialize-sheets", InitializeSheets);
 
 export default app;
