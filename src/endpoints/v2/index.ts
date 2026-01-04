@@ -10,6 +10,6 @@ const openapi = fromHono(app, {
   redoc_url: null,
 });
 
-openapi.post("/mentorship-program", MentorshipProgramCreate);
+// openapi.post("/mentorship-program", MentorshipProgramCreate);
 
 export default app;
