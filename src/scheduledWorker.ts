@@ -13,24 +13,23 @@ export async function handleScheduled(env: Env): Promise<void> {
   try {
     // Calculate the timestamp for 20 minutes ago
     const twentyMinutesAgo = new Date(
-      Date.now() - 20 * 60 * 1000
+      Date.now() - 20 * 60 * 1000,
     ).toISOString();
 
     // Find students who:
     // 1. Have status 'pending'
     // 2. Were created more than 10 minutes ago
     // 3. Haven't received a follow-up email yet
-    const pendingStudents = await env.db
-      .prepare(
-        `
+    const pendingStudents = await env.EVENTS_DB.prepare(
+      `
         SELECT s.id, s.name, s.email, s.createdAt 
         FROM students s
         LEFT JOIN followup_emails fe ON s.id = fe.student_id
         WHERE s.status = 'pending' 
         AND s.createdAt <= ?
         AND fe.id IS NULL
-      `
-      )
+      `,
+    )
       .bind(twentyMinutesAgo)
       .all();
 
@@ -40,7 +39,7 @@ export async function handleScheduled(env: Env): Promise<void> {
     }
 
     console.log(
-      `Found ${pendingStudents.results.length} students requiring follow-up emails.`
+      `Found ${pendingStudents.results.length} students requiring follow-up emails.`,
     );
 
     const emailService = new EmailService(env.BREVO_API_KEY);
@@ -54,14 +53,14 @@ export async function handleScheduled(env: Env): Promise<void> {
       };
       try {
         console.log(
-          `Sending follow-up email to ${student.name} (${student.email})`
+          `Sending follow-up email to ${student.name} (${student.email})`,
         );
 
         // Send the follow-up email
         const emailSent = await emailService.sendFollowUpEmail(
           student.name,
           student.email,
-          student.id
+          student.id,
         );
 
         if (emailSent) {
@@ -71,27 +70,26 @@ export async function handleScheduled(env: Env): Promise<void> {
             .substring(2, 8)
             .toUpperCase()}`;
 
-          await env.db
-            .prepare(
-              `
+          await env.EVENTS_DB.prepare(
+            `
               INSERT INTO followup_emails (id, student_id, email_sent_at, email_type)
               VALUES (?, ?, ?, ?)
-            `
-            )
+            `,
+          )
             .bind(
               emailId,
               student.id,
               new Date().toISOString(),
-              "payment_reminder"
+              "payment_reminder",
             )
             .run();
 
           console.log(
-            `Follow-up email sent and recorded for student ${student.id}`
+            `Follow-up email sent and recorded for student ${student.id}`,
           );
         } else {
           console.error(
-            `Failed to send follow-up email to student ${student.id}`
+            `Failed to send follow-up email to student ${student.id}`,
           );
         }
 
@@ -100,7 +98,7 @@ export async function handleScheduled(env: Env): Promise<void> {
       } catch (error) {
         console.error(
           `Error sending follow-up email to student ${student.id}:`,
-          error
+          error,
         );
       }
     }

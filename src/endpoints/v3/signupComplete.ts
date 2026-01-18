@@ -1,0 +1,193 @@
+import { OpenAPIRoute } from "chanfana";
+import {
+  type AppContext,
+  ErrorResponse,
+  SignupCompleteRequest,
+  SignupCompleteResponse,
+} from "../../types";
+
+/**
+ * POST /api/v3/auth/signup/complete
+ * Complete account setup with password after EtLab verification
+ */
+export class SignupComplete extends OpenAPIRoute {
+  schema = {
+    summary: "Complete account setup with password and profile",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: SignupCompleteRequest,
+          },
+        },
+      },
+    },
+    responses: {
+      "200": {
+        description: "Account setup completed successfully",
+        content: {
+          "application/json": {
+            schema: SignupCompleteResponse,
+          },
+        },
+      },
+      "400": {
+        description: "Bad request - invalid or expired token",
+        content: {
+          "application/json": {
+            schema: ErrorResponse,
+          },
+        },
+      },
+      "500": {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponse,
+          },
+        },
+      },
+    },
+  };
+
+  async handle(c: AppContext) {
+    const data = await this.getValidatedData<typeof this.schema>();
+    const { signup_token, password, profile_photo, profile_photo_filename } = data.body;
+
+    try {
+      // Verify signup token
+      let userId: string | null = null;
+
+      // Try KV first
+      if (c.env.CHALLENGES) {
+        const tokenData = await c.env.CHALLENGES.get(`signup:${signup_token}`);
+        if (tokenData) {
+          const parsed = JSON.parse(tokenData);
+          userId = parsed.user_id;
+          // Delete the token after use
+          await c.env.CHALLENGES.delete(`signup:${signup_token}`);
+        }
+      }
+
+      // Fallback to database
+      if (!userId) {
+        const tokenRecord = await c.env.GENERAL_DB.prepare(
+          `SELECT user_id FROM challenges 
+           WHERE challenge = ? AND type = 'signup' AND expires_at > ?`
+        )
+          .bind(signup_token, Math.floor(Date.now() / 1000))
+          .first();
+
+        if (tokenRecord) {
+          userId = tokenRecord.user_id as string;
+          // Delete the token after use
+          await c.env.GENERAL_DB.prepare("DELETE FROM challenges WHERE challenge = ?")
+            .bind(signup_token)
+            .run();
+        }
+      }
+
+      if (!userId) {
+        return c.json(
+          { success: false, error: "Invalid or expired signup token" },
+          400
+        );
+      }
+
+      // Get user details
+      const user = await c.env.GENERAL_DB.prepare("SELECT * FROM users WHERE id = ?")
+        .bind(userId)
+        .first();
+
+      if (!user) {
+        return c.json({ success: false, error: "User not found" }, 400);
+      }
+
+      // Check if user already has a password
+      if (user.password_hash) {
+        return c.json(
+          { success: false, error: "Account already completed" },
+          400
+        );
+      }
+
+      // Hash password using Web Crypto API
+      const encoder = new TextEncoder();
+      const passwordData = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", passwordData);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const passwordHash = hashArray
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      // Handle profile photo
+      let photoUrl: string | null = null;
+      if (profile_photo) {
+        // Check if it's a base64 encoded image (custom upload)
+        if (profile_photo.startsWith('data:image/')) {
+          // Upload to R2
+          if (c.env.PROFILE_PHOTOS) {
+            try {
+              // Extract base64 data and mime type
+              const matches = profile_photo.match(/^data:image\/(\w+);base64,(.+)$/);
+              if (matches) {
+                const [, imageType, base64Data] = matches;
+                const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+                
+                // Generate unique filename
+                const extension = imageType.toLowerCase();
+                const filename = profile_photo_filename 
+                  ? `${userId}-${Date.now()}-${profile_photo_filename}`
+                  : `${userId}-${Date.now()}.${extension}`;
+                const key = `profiles/${filename}`;
+                
+                // Upload to R2
+                await c.env.PROFILE_PHOTOS.put(key, imageBuffer, {
+                  httpMetadata: {
+                    contentType: `image/${imageType}`,
+                  },
+                });
+                
+                // Construct public URL (adjust domain as needed)
+                photoUrl = `https://profile-photos.sctcoding.club/${key}`;
+              }
+            } catch (uploadError) {
+              console.error('R2 upload error:', uploadError);
+              // Continue without profile photo if upload fails
+            }
+          }
+        } else {
+          // It's a URL (from EtLab or external), store as-is
+          photoUrl = profile_photo;
+        }
+      }
+
+      // Update user with password and profile photo
+      await c.env.GENERAL_DB.prepare(
+        `UPDATE users 
+         SET password_hash = ?, profile_photo_url = COALESCE(?, profile_photo_url), updated_at = ?
+         WHERE id = ?`
+      )
+        .bind(
+          passwordHash,
+          photoUrl,
+          Math.floor(Date.now() / 1000),
+          userId
+        )
+        .run();
+
+      return c.json({
+        success: true,
+        data: {
+          user_id: userId,
+          email: user.email as string,
+          message: "Account setup completed successfully",
+          profile_photo_url: photoUrl,
+        },
+      });
+    } catch (error) {
+      console.error("Signup complete error:", error);
+      return c.json({ error: "Internal server error" }, 500);
+    }
+  }
+}

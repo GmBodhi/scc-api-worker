@@ -14,9 +14,16 @@ import { StudentRefund } from "./studentRefund";
 const app = new Hono<{ Bindings: Env }>();
 
 const openapi = fromHono(app, {
-  docs_url: null,
-  openapi_url: null,
-  redoc_url: null,
+  docs_url: "/docs",
+  openapi_url: "/openapi.json",
+  redoc_url: "/redoc",
+  schema: {
+    info: {
+      title: "SCC API v1",
+      version: "1.0.0",
+      description: "Transaction, student, and mentorship management endpoints",
+    },
+  },
 });
 
 openapi.post("/transaction", TransactionCreate);
@@ -31,4 +38,4 @@ openapi.post("/verify-student", VerifyStudent);
 // openapi.post("/email-test", EmailTest);
 openapi.post("/initialize-sheets", InitializeSheets);
 
-export default app;
+export default openapi;

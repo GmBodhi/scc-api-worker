@@ -32,45 +32,60 @@ export class TicketVerify extends OpenAPIRoute {
     const studentId = c.req.param("id");
 
     if (!studentId) {
-      return c.json({ 
-        success: false, 
-        message: "Student ID is required" 
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: "Student ID is required",
+        },
+        400,
+      );
     }
 
     try {
       // Check if student exists and has paid status
-      const studentResult = await c.env.db
-        .prepare("SELECT name, status FROM students WHERE id = ?")
+      const studentResult = await c.env.EVENTS_DB.prepare(
+        "SELECT name, status FROM students WHERE id = ?",
+      )
         .bind(studentId)
         .first();
 
       if (!studentResult) {
-        return c.json({ 
-          success: false, 
-          message: "Student not found" 
-        }, 404);
+        return c.json(
+          {
+            success: false,
+            message: "Student not found",
+          },
+          404,
+        );
       }
 
-      if (studentResult.status !== 'paid') {
-        return c.json({ 
-          success: false, 
-          message: "Student has not paid" 
-        }, 402);
+      if (studentResult.status !== "paid") {
+        return c.json(
+          {
+            success: false,
+            message: "Student has not paid",
+          },
+          402,
+        );
       }
 
-      return c.json({ 
-        success: true, 
-        name: studentResult.name,
-        message: "Ticket valid" 
-      }, 200);
-
+      return c.json(
+        {
+          success: true,
+          name: studentResult.name,
+          message: "Ticket valid",
+        },
+        200,
+      );
     } catch (error) {
       console.error("Error verifying ticket:", error);
-      return c.json({ 
-        success: false, 
-        message: "Internal server error" 
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          message: "Internal server error",
+        },
+        500,
+      );
     }
   }
 }

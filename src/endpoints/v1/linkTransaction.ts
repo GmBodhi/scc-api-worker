@@ -1,5 +1,9 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext, LinkTransactionRequest, LinkTransactionResponse } from "../../types";
+import {
+  type AppContext,
+  LinkTransactionRequest,
+  LinkTransactionResponse,
+} from "../../types";
 import { EmailService } from "../../services/emailService";
 import { GoogleSheetsService } from "../../services/googleSheetsService";
 
@@ -50,40 +54,50 @@ export class LinkTransaction extends OpenAPIRoute {
 
     try {
       // Check if transaction exists and is unused
-      const transactionResult = await c.env.db
-        .prepare("SELECT * FROM transactions WHERE ref = ? AND status = 'unused'")
+      const transactionResult = await c.env.EVENTS_DB.prepare(
+        "SELECT * FROM transactions WHERE ref = ? AND status = 'unused'",
+      )
         .bind(refId)
         .first();
 
       if (!transactionResult) {
-        return c.json({ 
-          success: false, 
-          message: "Transaction not found or already used" 
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            message: "Transaction not found or already used",
+          },
+          400,
+        );
       }
 
       // Check if student exists and has pending status
-      const studentResult = await c.env.db
-        .prepare("SELECT * FROM students WHERE id = ? AND status = 'pending'")
+      const studentResult = await c.env.EVENTS_DB.prepare(
+        "SELECT * FROM students WHERE id = ? AND status = 'pending'",
+      )
         .bind(studentId)
         .first();
 
       if (!studentResult) {
-        return c.json({ 
-          success: false, 
-          message: "Student not found or not in pending status" 
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            message: "Student not found or not in pending status",
+          },
+          400,
+        );
       }
 
       // Update transaction status to 'used'
-      await c.env.db
-        .prepare("UPDATE transactions SET status = 'used', updatedAt = ? WHERE ref = ?")
+      await c.env.EVENTS_DB.prepare(
+        "UPDATE transactions SET status = 'used', updatedAt = ? WHERE ref = ?",
+      )
         .bind(new Date().toISOString(), refId)
         .run();
 
       // Update student with upiRef and change status to 'paid'
-      await c.env.db
-        .prepare("UPDATE students SET upiRef = ?, status = 'paid', updatedAt = ? WHERE id = ?")
+      await c.env.EVENTS_DB.prepare(
+        "UPDATE students SET upiRef = ?, status = 'paid', updatedAt = ? WHERE id = ?",
+      )
         .bind(refId, new Date().toISOString(), studentId)
         .run();
 
@@ -94,13 +108,17 @@ export class LinkTransaction extends OpenAPIRoute {
           studentResult.name as string,
           studentResult.email as string,
           studentId,
-          refId
+          refId,
         );
 
         if (!emailSent) {
-          console.error(`Failed to send payment confirmation email to student ${studentId}`);
+          console.error(
+            `Failed to send payment confirmation email to student ${studentId}`,
+          );
         } else {
-          console.log(`Payment confirmation email sent to student ${studentId} (${studentResult.email})`);
+          console.log(
+            `Payment confirmation email sent to student ${studentId} (${studentResult.email})`,
+          );
         }
       } catch (emailError) {
         console.error("Error sending payment confirmation email:", emailError);
@@ -115,29 +133,43 @@ export class LinkTransaction extends OpenAPIRoute {
           privateKey: c.env.GOOGLE_PRIVATE_KEY,
         });
 
-        const sheetsUpdated = await googleSheetsService.updateStudentStatus(studentId, 'paid', refId);
+        const sheetsUpdated = await googleSheetsService.updateStudentStatus(
+          studentId,
+          "paid",
+          refId,
+        );
 
         if (!sheetsUpdated) {
-          console.error(`Failed to update student ${studentId} status in Google Sheets`);
+          console.error(
+            `Failed to update student ${studentId} status in Google Sheets`,
+          );
         } else {
-          console.log(`Student ${studentId} status updated to 'paid' in Google Sheets`);
+          console.log(
+            `Student ${studentId} status updated to 'paid' in Google Sheets`,
+          );
         }
       } catch (sheetsError) {
         console.error("Error updating Google Sheets:", sheetsError);
         // Don't fail the transaction linking if Google Sheets update fails
       }
 
-      return c.json({ 
-        success: true, 
-        message: "Transaction linked successfully to student. Confirmation email sent." 
-      }, 200);
-
+      return c.json(
+        {
+          success: true,
+          message:
+            "Transaction linked successfully to student. Confirmation email sent.",
+        },
+        200,
+      );
     } catch (error) {
       console.error("Error linking transaction:", error);
-      return c.json({ 
-        success: false, 
-        message: "Internal server error" 
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          message: "Internal server error",
+        },
+        500,
+      );
     }
   }
 }

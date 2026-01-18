@@ -1,6 +1,14 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext, RawTransaction, TransactionCheckResponse, ErrorResponse } from "../../types";
-import { parseTransaction, parseTransactionHDFC } from "../../services/transaction";
+import {
+  type AppContext,
+  RawTransaction,
+  TransactionCheckResponse,
+  ErrorResponse,
+} from "../../types";
+import {
+  parseTransaction,
+  parseTransactionHDFC,
+} from "../../services/transaction";
 
 export class TransactionCheck extends OpenAPIRoute {
   schema = {
@@ -28,7 +36,7 @@ export class TransactionCheck extends OpenAPIRoute {
         content: {
           "application/json": {
             schema: ErrorResponse,
-          }
+          },
         },
       },
       "404": {
@@ -36,7 +44,7 @@ export class TransactionCheck extends OpenAPIRoute {
         content: {
           "application/json": {
             schema: ErrorResponse,
-          }
+          },
         },
       },
     },
@@ -65,8 +73,9 @@ export class TransactionCheck extends OpenAPIRoute {
 
     try {
       // Check if transaction already exists by UPI reference
-      const existingTransaction = await c.env.db
-        .prepare("SELECT * FROM transactions WHERE ref = ?")
+      const existingTransaction = await c.env.EVENTS_DB.prepare(
+        "SELECT * FROM transactions WHERE ref = ?",
+      )
         .bind(extracted.upiRef)
         .first();
 
@@ -81,17 +90,19 @@ export class TransactionCheck extends OpenAPIRoute {
             upiRef: existingTransaction.ref,
             status: existingTransaction.status,
           },
-          message: "Transaction already exists"
+          message: "Transaction already exists",
         });
       }
 
       // Transaction doesn't exist, create it
-      const transactionId = Math.random().toString(36).substring(2, 10).toUpperCase();
+      const transactionId = Math.random()
+        .toString(36)
+        .substring(2, 10)
+        .toUpperCase();
 
-      const res = await c.env.db
-        .prepare(
-          "INSERT INTO transactions(id, vpa, amount, date, ref, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-        )
+      const res = await c.env.EVENTS_DB.prepare(
+        "INSERT INTO transactions(id, vpa, amount, date, ref, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      )
         .bind(
           transactionId,
           extracted.vpa,
@@ -100,7 +111,7 @@ export class TransactionCheck extends OpenAPIRoute {
           extracted.upiRef,
           "unused",
           new Date().toISOString(),
-          new Date().toISOString()
+          new Date().toISOString(),
         )
         .run();
 
@@ -116,9 +127,8 @@ export class TransactionCheck extends OpenAPIRoute {
           upiRef: extracted.upiRef,
           status: "unused",
         },
-        message: "Transaction created successfully"
+        message: "Transaction created successfully",
       });
-
     } catch (e) {
       console.error("Error checking/creating transaction:", e);
       return c.json({ error: "Failed to process transaction" }, 500);

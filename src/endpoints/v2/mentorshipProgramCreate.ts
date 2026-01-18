@@ -67,10 +67,9 @@ export class MentorshipProgramCreate extends OpenAPIRoute {
       };
 
       // Insert into database
-      const res = await c.env.db
-        .prepare(
-          "INSERT INTO mentorship_program(id, name, batch, email, phone, experienceLevel, projectIdea, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        )
+      const res = await c.env.EVENTS_DB.prepare(
+        "INSERT INTO mentorship_program(id, name, batch, email, phone, experienceLevel, projectIdea, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      )
         .bind(
           registration.id,
           registration.name,
@@ -81,7 +80,7 @@ export class MentorshipProgramCreate extends OpenAPIRoute {
           registration.projectIdea,
           registration.status,
           new Date().toISOString(),
-          new Date().toISOString()
+          new Date().toISOString(),
         )
         .run()
         .catch((e) => ({ error: true, details: e.message }));
@@ -90,22 +89,25 @@ export class MentorshipProgramCreate extends OpenAPIRoute {
         console.error("Database error:", res);
         return c.json(
           { error: "The email or phone number is already in use" },
-          400
+          400,
         );
       }
 
       // Send confirmation email (non-blocking failure)
       try {
         const emailService = new EmailService(c.env.BREVO_API_KEY);
-        const emailSent = await emailService.sendMentorshipProgramConfirmationEmail(
-          registration.name,
-          registration.email,
-          registration.id,
-          registration.experienceLevel
-        );
+        const emailSent =
+          await emailService.sendMentorshipProgramConfirmationEmail(
+            registration.name,
+            registration.email,
+            registration.id,
+            registration.experienceLevel,
+          );
 
         if (!emailSent) {
-          console.error(`Failed to send confirmation email to ${registration.email}`);
+          console.error(
+            `Failed to send confirmation email to ${registration.email}`,
+          );
         } else {
           console.log(`Confirmation email sent to ${registration.email}`);
         }
@@ -122,23 +124,28 @@ export class MentorshipProgramCreate extends OpenAPIRoute {
           privateKey: c.env.GOOGLE_PRIVATE_KEY,
         });
 
-        const sheetsUpdated = await googleSheetsService.addMentorshipProgramRegistration({
-          id: registration.id,
-          name: registration.name,
-          batch: registration.batch,
-          email: registration.email,
-          phone: registration.phone,
-          experienceLevel: registration.experienceLevel,
-          projectIdea: registration.projectIdea,
-          status: registration.status,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
+        const sheetsUpdated =
+          await googleSheetsService.addMentorshipProgramRegistration({
+            id: registration.id,
+            name: registration.name,
+            batch: registration.batch,
+            email: registration.email,
+            phone: registration.phone,
+            experienceLevel: registration.experienceLevel,
+            projectIdea: registration.projectIdea,
+            status: registration.status,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
 
         if (!sheetsUpdated) {
-          console.error(`Failed to add registration ${registration.id} to Google Sheets`);
+          console.error(
+            `Failed to add registration ${registration.id} to Google Sheets`,
+          );
         } else {
-          console.log(`Registration ${registration.id} added to Google Sheets successfully`);
+          console.log(
+            `Registration ${registration.id} added to Google Sheets successfully`,
+          );
         }
       } catch (sheetsError) {
         console.error("Error updating Google Sheets:", sheetsError);

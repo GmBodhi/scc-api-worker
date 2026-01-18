@@ -41,10 +41,9 @@ export class TransactionCreate extends OpenAPIRoute {
       return c.json({ error: "Invalid transaction data" });
     }
 
-    const res = await c.env.db
-      .prepare(
-        "INSERT INTO transactions(id, vpa, amount, date, ref, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-      )
+    const res = await c.env.EVENTS_DB.prepare(
+      "INSERT INTO transactions(id, vpa, amount, date, ref, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    )
       .bind(
         Math.random().toString(36).substring(2, 10).toUpperCase(),
         extracted.vpa,
@@ -53,7 +52,7 @@ export class TransactionCreate extends OpenAPIRoute {
         extracted.upiRef,
         "unused",
         new Date().toISOString(),
-        new Date().toISOString()
+        new Date().toISOString(),
       )
       .run();
 

@@ -10,51 +10,93 @@
 	"routes": [
 		{
 			"pattern": "api.sctcoding.club",
-			"custom_domain": true
-		}
+			"custom_domain": true,
+		},
 	],
 	"observability": {
-		"enabled": true
+		"enabled": true,
 	},
 	/**
-	 * Smart Placement
-	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-	 */
+   * Smart Placement
+   * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+   */
 	// "placement": { "mode": "smart" }
 	/**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
+   * Bindings
+   * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
+   * databases, object storage, AI inference, real-time communication and more.
+   * https://developers.cloudflare.com/workers/runtime-apis/bindings/
+   */
 	/**
-	 * Environment Variables
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-	 */
+   * Environment Variables
+   * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
+   */
 	"d1_databases": [
 		{
-			"binding": "db",
+			"binding": "EVENTS_DB",
 			"database_name": "scc_treasure_hunt_registrations",
-			"database_id": "2e8ed049-6348-4400-9ff5-a64e447fbe3d"
-		}
+			"database_id": "2e8ed049-6348-4400-9ff5-a64e447fbe3d",
+			"migrations_dir": "./migrations/events/"
+		},
+		{
+			"binding": "GENERAL_DB",
+			"database_name": "general_db",
+			"database_id": "19c775b6-212a-46eb-986f-dab78319f11e",
+			"migrations_dir": "./migrations/general/"
+		},
 	],
+	/**
+   * KV Namespaces (for passkey challenges)
+   * Uncomment and configure after creating KV namespace:
+   * wrangler kv:namespace create "CHALLENGES"
+   */
+	// "kv_namespaces": [
+	//   {
+	//     "binding": "CHALLENGES",
+	//     "id": "your-kv-namespace-id"
+	//   }
+	// ],
+	/**
+   * Environment variables for passkey authentication
+   */
+	"vars": {
+		"RP_NAME": "Coding Club",
+		"RP_ID": "sccbeta.netlify.app",
+		"ORIGIN": "https://sccbeta.netlify.app",
+	},
 	"triggers": {
 		"crons": [
 			"*/30 * * * *"
-		]
-	}
+		],
+	},
+	"kv_namespaces": [
+		{
+			"binding": "CHALLENGES",
+			"id": "0792669c2d0d4c68b617a50e82279efb",
+		},
+	],
 	/**
-	 * Note: Use secrets to store sensitive data.
-	 * https://developers.cloudflare.com/workers/configuration/secrets/
-	 */
+   * R2 Buckets (for profile photos)
+   * Create bucket: wrangler r2 bucket create profile-photos
+   */
+	"r2_buckets": [
+		{
+			"binding": "PROFILE_PHOTOS",
+			"bucket_name": "user-profiles",
+		},
+	],
 	/**
-	 * Static Assets
-	 * https://developers.cloudflare.com/workers/static-assets/binding/
-	 */
+   * Note: Use secrets to store sensitive data.
+   * https://developers.cloudflare.com/workers/configuration/secrets/
+   */
+	/**
+   * Static Assets
+   * https://developers.cloudflare.com/workers/static-assets/binding/
+   */
 	// "assets": { "directory": "./public/", "binding": "ASSETS" }
 	/**
-	 * Service Bindings (communicate between multiple Workers)
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-	 */
+   * Service Bindings (communicate between multiple Workers)
+   * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+   */
 	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
 }

@@ -44,7 +44,9 @@ export const MentorshipProgramRegistration = z.object({
   email: z.string().email("Valid email is required"),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
   experienceLevel: ExperienceLevel,
-  projectIdea: z.string().min(10, "Project idea must be at least 10 characters"),
+  projectIdea: z
+    .string()
+    .min(10, "Project idea must be at least 10 characters"),
 });
 
 export const MentorshipProgramResponse = MentorshipProgramRegistration.extend({
@@ -96,4 +98,224 @@ export const TransactionCheckResponse = z.object({
     })
     .optional(),
   message: z.string(),
+});
+
+// V3 Auth schemas
+export const EtlabVerifyRequest = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export const EtlabVerifyResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      user_id: z.string(),
+      signup_token: z.string(),
+      name: z.string().nullable(),
+      email: z.string().nullable(),
+      etlab_username: z.string(),
+      admission_no: z.string().nullable(),
+      batch: z.string().nullable(),
+      phone: z.string().nullable(),
+      register_no: z.string().nullable(),
+      profile_photo_url: z.string().nullable(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const SignupCompleteRequest = z.object({
+  signup_token: z.string().min(1, "Signup token is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  profile_photo: z.string().optional(), // base64 data or URL
+  profile_photo_filename: z.string().optional(), // filename for custom uploads
+});
+
+export const SignupCompleteResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      user_id: z.string(),
+      email: z.string(),
+      message: z.string(),
+      profile_photo_url: z.string().nullable(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const LoginRequest = z.object({
+  email: z.string().email("Valid email is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export const LoginResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      session_id: z.string(),
+      user: z.object({
+        id: z.string(),
+        email: z.string(),
+        name: z.string(),
+        profile_photo_url: z.string().nullable(),
+      }),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+// Passkey schemas
+export const PasskeyRegisterStartRequest = z.object({
+  session_id: z.string().min(1, "Session ID is required"),
+  device_name: z.string().optional(),
+});
+
+export const PasskeyRegisterStartResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      challenge: z.string(),
+      rp: z.object({
+        name: z.string(),
+        id: z.string(),
+      }),
+      user: z.object({
+        id: z.string(),
+        name: z.string(),
+        displayName: z.string(),
+      }),
+      pubKeyCredParams: z.array(
+        z.object({
+          type: z.literal("public-key"),
+          alg: z.number(),
+        }),
+      ),
+      timeout: z.number(),
+      attestation: z.string(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const PasskeyRegisterVerifyRequest = z.object({
+  credential: z.object({
+    id: z.string(),
+    rawId: z.string(),
+    type: z.literal("public-key"),
+    response: z.object({
+      clientDataJSON: z.string(),
+      attestationObject: z.string(),
+    }),
+  }),
+  device_name: z.string().optional(),
+});
+
+export const PasskeyRegisterVerifyResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      credential_id: z.string(),
+      message: z.string(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const PasskeyLoginStartRequest = z.object({
+  email: z.string().email("Valid email is required"),
+});
+
+export const PasskeyLoginStartResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      challenge: z.string(),
+      timeout: z.number(),
+      rpId: z.string(),
+      allowCredentials: z.array(
+        z.object({
+          type: z.literal("public-key"),
+          id: z.string(),
+          transports: z.array(z.string()).optional(),
+        }),
+      ),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const PasskeyLoginVerifyRequest = z.object({
+  email: z.string().email("Valid email is required"),
+  credential: z.object({
+    id: z.string(),
+    rawId: z.string(),
+    type: z.literal("public-key"),
+    response: z.object({
+      clientDataJSON: z.string(),
+      authenticatorData: z.string(),
+      signature: z.string(),
+      userHandle: z.string().optional(),
+    }),
+  }),
+});
+
+export const PasskeyLoginVerifyResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      session_id: z.string(),
+      user: z.object({
+        id: z.string(),
+        email: z.string(),
+        name: z.string(),
+        profile_photo_url: z.string().nullable(),
+      }),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const GetCurrentUserResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      id: z.string(),
+      email: z.string(),
+      name: z.string(),
+      etlab_username: z.string().nullable(),
+      profile_photo_url: z.string().nullable(),
+      created_at: z.number(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const LogoutResponse = z.object({
+  success: z.boolean(),
+  message: z.string().optional(),
+  error: z.string().optional(),
+});
+
+export const GetPasskeysResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .array(
+      z.object({
+        id: z.string(),
+        credential_id: z.string(),
+        device_name: z.string().nullable(),
+        created_at: z.number(),
+        last_used_at: z.number().nullable(),
+      }),
+    )
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const DeletePasskeyResponse = z.object({
+  success: z.boolean(),
+  message: z.string().optional(),
+  error: z.string().optional(),
 });

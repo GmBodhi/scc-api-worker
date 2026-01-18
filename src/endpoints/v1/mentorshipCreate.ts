@@ -49,7 +49,7 @@ export class MentorshipCreate extends OpenAPIRoute {
     try {
       /*
       // Check current mentorship count to enforce 125-person capacity limit
-      const countResult = await c.env.db
+      const countResult = await c.env.EVENTS_DB
         .prepare("SELECT COUNT(*) as count FROM mentorships")
         .first<{ count: number }>();
 
@@ -76,10 +76,9 @@ export class MentorshipCreate extends OpenAPIRoute {
         technologies: JSON.stringify(mentorshipData.technologies),
       };
 
-      const res = await c.env.db
-        .prepare(
-          "INSERT INTO mentorships(id, name, batch, email, phone, technologies, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-        )
+      const res = await c.env.EVENTS_DB.prepare(
+        "INSERT INTO mentorships(id, name, batch, email, phone, technologies, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      )
         .bind(
           mentorship.id,
           mentorship.name,
@@ -88,7 +87,7 @@ export class MentorshipCreate extends OpenAPIRoute {
           mentorship.phone,
           mentorship.technologies,
           new Date().toISOString(),
-          new Date().toISOString()
+          new Date().toISOString(),
         )
         .run()
         .catch((e) => ({ error: true, details: e.message }));
@@ -97,7 +96,7 @@ export class MentorshipCreate extends OpenAPIRoute {
         console.error("Database error:", res);
         return c.json(
           { error: "The email or phone number is already in use" },
-          400
+          400,
         );
       }
 
@@ -123,11 +122,11 @@ export class MentorshipCreate extends OpenAPIRoute {
 
         if (!sheetsUpdated) {
           console.error(
-            `Failed to add mentorship ${mentorship.id} to Google Sheets`
+            `Failed to add mentorship ${mentorship.id} to Google Sheets`,
           );
         } else {
           console.log(
-            `Mentorship ${mentorship.id} added to Google Sheets successfully`
+            `Mentorship ${mentorship.id} added to Google Sheets successfully`,
           );
         }
       } catch (sheetsError) {

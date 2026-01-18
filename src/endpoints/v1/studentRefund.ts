@@ -13,15 +13,17 @@ const RefundRequest = z.object({
 const RefundResponse = z.object({
   success: z.boolean(),
   message: z.string(),
-  refund: z.object({
-    id: z.string(),
-    studentId: z.string(),
-    studentName: z.string(),
-    studentEmail: z.string(),
-    transactionRef: z.string().optional(),
-    refundReason: z.string(),
-    refundedAt: z.string(),
-  }).optional(),
+  refund: z
+    .object({
+      id: z.string(),
+      studentId: z.string(),
+      studentName: z.string(),
+      studentEmail: z.string(),
+      transactionRef: z.string().optional(),
+      refundReason: z.string(),
+      refundedAt: z.string(),
+    })
+    .optional(),
 });
 
 export class StudentRefund extends OpenAPIRoute {
@@ -70,38 +72,48 @@ export class StudentRefund extends OpenAPIRoute {
 
     try {
       // Check if student exists with both email and phone number
-      const studentResult = await c.env.db
-        .prepare("SELECT * FROM students WHERE email = ? AND phoneNumber = ?")
+      const studentResult = await c.env.EVENTS_DB.prepare(
+        "SELECT * FROM students WHERE email = ? AND phoneNumber = ?",
+      )
         .bind(email, phoneNumber)
         .first();
 
       if (!studentResult) {
-        return c.json({
-          success: false,
-          message: "No student found with the provided email and phone number"
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            message:
+              "No student found with the provided email and phone number",
+          },
+          400,
+        );
       }
 
       const studentId = studentResult.id as string;
 
       // Check if refund already exists
-      const existingRefund = await c.env.db
-        .prepare("SELECT id FROM refunds WHERE studentId = ?")
+      const existingRefund = await c.env.EVENTS_DB.prepare(
+        "SELECT id FROM refunds WHERE studentId = ?",
+      )
         .bind(studentId)
         .first();
 
       if (existingRefund) {
-        return c.json({
-          success: false,
-          message: "Student has already been refunded"
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            message: "Student has already been refunded",
+          },
+          400,
+        );
       }
 
       // Get transaction details if student is paid
       let transactionResult = null;
-      if (studentResult.status === 'paid' && studentResult.upiRef) {
-        transactionResult = await c.env.db
-          .prepare("SELECT * FROM transactions WHERE ref = ?")
+      if (studentResult.status === "paid" && studentResult.upiRef) {
+        transactionResult = await c.env.EVENTS_DB.prepare(
+          "SELECT * FROM transactions WHERE ref = ?",
+        )
           .bind(studentResult.upiRef)
           .first();
       }
@@ -128,14 +140,15 @@ export class StudentRefund extends OpenAPIRoute {
       };
 
       // Insert refund record
-      await c.env.db
-        .prepare(`
+      await c.env.EVENTS_DB.prepare(
+        `
           INSERT INTO refunds(
             id, studentId, studentName, studentBatch, studentEmail, studentPhoneNumber,
             transactionId, transactionVpa, transactionAmount, transactionDate, transactionRef,
             refundReason, refundedAt, refundedBy
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `)
+        `,
+      )
         .bind(
           refundData.id,
           refundData.studentId,
@@ -150,50 +163,58 @@ export class StudentRefund extends OpenAPIRoute {
           refundData.transactionRef,
           refundData.refundReason,
           refundData.refundedAt,
-          refundData.refundedBy
+          refundData.refundedBy,
         )
         .run();
 
       // Mark transaction as refunded if it exists
       if (transactionResult) {
-        await c.env.db
-          .prepare("UPDATE transactions SET updatedAt = ? WHERE ref = ?")
+        await c.env.EVENTS_DB.prepare(
+          "UPDATE transactions SET updatedAt = ? WHERE ref = ?",
+        )
           .bind(new Date().toISOString(), transactionResult.ref)
           .run();
       }
 
       // Delete student record
-      await c.env.db
-        .prepare("DELETE FROM students WHERE id = ?")
+      await c.env.EVENTS_DB.prepare("DELETE FROM students WHERE id = ?")
         .bind(studentId)
         .run();
 
       // TODO: Update Google Sheets - remove student row
       // This functionality will be added once removeStudentFromSheets method is implemented
-      console.log(`Student ${studentId} refunded - Google Sheets update skipped for now`);
+      console.log(
+        `Student ${studentId} refunded - Google Sheets update skipped for now`,
+      );
 
       console.log(`Refund processed for student ${studentId}:`, refundData);
 
-      return c.json({
-        success: true,
-        message: "Refund processed successfully. Student removed from database.",
-        refund: {
-          id: refundData.id,
-          studentId: refundData.studentId,
-          studentName: refundData.studentName,
-          studentEmail: refundData.studentEmail,
-          transactionRef: refundData.transactionRef,
-          refundReason: refundData.refundReason,
-          refundedAt: refundData.refundedAt,
-        }
-      }, 200);
-
+      return c.json(
+        {
+          success: true,
+          message:
+            "Refund processed successfully. Student removed from database.",
+          refund: {
+            id: refundData.id,
+            studentId: refundData.studentId,
+            studentName: refundData.studentName,
+            studentEmail: refundData.studentEmail,
+            transactionRef: refundData.transactionRef,
+            refundReason: refundData.refundReason,
+            refundedAt: refundData.refundedAt,
+          },
+        },
+        200,
+      );
     } catch (error) {
       console.error("Error processing refund:", error);
-      return c.json({
-        success: false,
-        message: "Internal server error"
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          message: "Internal server error",
+        },
+        500,
+      );
     }
   }
 }

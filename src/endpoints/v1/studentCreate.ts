@@ -1,5 +1,10 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext, StudentRegistration, StudentResponse, ErrorResponse } from "../../types";
+import {
+  type AppContext,
+  StudentRegistration,
+  StudentResponse,
+  ErrorResponse,
+} from "../../types";
 import { GoogleSheetsService } from "../../services/googleSheetsService";
 
 export class StudentCreate extends OpenAPIRoute {
@@ -28,7 +33,7 @@ export class StudentCreate extends OpenAPIRoute {
         content: {
           "application/json": {
             schema: ErrorResponse,
-          }
+          },
         },
       },
       "404": {
@@ -43,29 +48,34 @@ export class StudentCreate extends OpenAPIRoute {
 
     try {
       // Check current student count to enforce 125-person capacity limit
-      const countResult = await c.env.db
-        .prepare("SELECT COUNT(*) as count FROM students")
-        .first<{ count: number }>();
+      const countResult = await c.env.EVENTS_DB.prepare(
+        "SELECT COUNT(*) as count FROM students",
+      ).first<{ count: number }>();
 
       if (countResult && countResult.count >= 125) {
-        return c.json({ error: "Registration capacity exceeded. Maximum 125 students allowed." }, 400);
+        return c.json(
+          {
+            error:
+              "Registration capacity exceeded. Maximum 125 students allowed.",
+          },
+          400,
+        );
       }
 
       const studentData = data.body;
-      
+
       // Generate a unique ID (using timestamp + random string for simplicity)
       const id = `STU_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-      
+
       const student = {
         id,
         ...studentData,
-        status: studentData?.status || 'pending',
+        status: studentData?.status || "pending",
       };
-      
-      const res = await c.env.db
-        .prepare(
-          "INSERT INTO students(id, name, batch, email, phoneNumber, status, upiRef, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        )
+
+      const res = await c.env.EVENTS_DB.prepare(
+        "INSERT INTO students(id, name, batch, email, phoneNumber, status, upiRef, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      )
         .bind(
           student.id,
           student.name,
@@ -75,13 +85,17 @@ export class StudentCreate extends OpenAPIRoute {
           student.status,
           student.upiRef || null,
           new Date().toISOString(),
-          new Date().toISOString()
+          new Date().toISOString(),
         )
-        .run().catch((e) => ({ error: true, details: e.message }));
-      
-      if ('error' in res) {
+        .run()
+        .catch((e) => ({ error: true, details: e.message }));
+
+      if ("error" in res) {
         console.error("Database error:", res);
-        return c.json({ error: "The email or phone number is already in use" }, 400);
+        return c.json(
+          { error: "The email or phone number is already in use" },
+          400,
+        );
       }
 
       // Update Google Sheets
@@ -107,16 +121,17 @@ export class StudentCreate extends OpenAPIRoute {
         if (!sheetsUpdated) {
           console.error(`Failed to add student ${student.id} to Google Sheets`);
         } else {
-          console.log(`Student ${student.id} added to Google Sheets successfully`);
+          console.log(
+            `Student ${student.id} added to Google Sheets successfully`,
+          );
         }
       } catch (sheetsError) {
         console.error("Error updating Google Sheets:", sheetsError);
         // Don't fail the registration if Google Sheets update fails
       }
-      
+
       console.log("Student registration:", student, res);
       return c.json(student, 201);
-
     } catch (e) {
       console.error("Error creating student:", e);
       return c.json({ error: "Failed to create student" }, 500);

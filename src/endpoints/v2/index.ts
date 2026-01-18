@@ -12,4 +12,4 @@ const openapi = fromHono(app, {
 
 // openapi.post("/mentorship-program", MentorshipProgramCreate);
 
-export default app;
+export default openapi;
