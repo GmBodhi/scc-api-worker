@@ -136,10 +136,16 @@ export const SignupCompleteResponse = z.object({
   success: z.boolean(),
   data: z
     .object({
-      user_id: z.string(),
-      email: z.string(),
+      access_token: z.string(),
+      refresh_token: z.string(),
+      expires_in: z.number(),
+      user: z.object({
+        id: z.string(),
+        email: z.string(),
+        name: z.string(),
+        profile_photo_url: z.string().nullable(),
+      }),
       message: z.string(),
-      profile_photo_url: z.string().nullable(),
     })
     .optional(),
   error: z.string().optional(),
@@ -154,7 +160,9 @@ export const LoginResponse = z.object({
   success: z.boolean(),
   data: z
     .object({
-      session_id: z.string(),
+      access_token: z.string(),
+      refresh_token: z.string(),
+      expires_in: z.number(),
       user: z.object({
         id: z.string(),
         email: z.string(),

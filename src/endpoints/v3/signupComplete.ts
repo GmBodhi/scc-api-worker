@@ -5,6 +5,11 @@ import {
   SignupCompleteRequest,
   SignupCompleteResponse,
 } from "../../types";
+import {
+  generateJWT,
+  generateRefreshToken,
+  hashRefreshToken,
+} from "../../utils/jwt";
 
 /**
  * POST /api/v3/auth/signup/complete
@@ -52,7 +57,8 @@ export class SignupComplete extends OpenAPIRoute {
 
   async handle(c: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
-    const { signup_token, password, profile_photo, profile_photo_filename } = data.body;
+    const { signup_token, password, profile_photo, profile_photo_filename } =
+      data.body;
 
     try {
       // Verify signup token
@@ -73,7 +79,7 @@ export class SignupComplete extends OpenAPIRoute {
       if (!userId) {
         const tokenRecord = await c.env.GENERAL_DB.prepare(
           `SELECT user_id FROM challenges 
-           WHERE challenge = ? AND type = 'signup' AND expires_at > ?`
+           WHERE challenge = ? AND type = 'signup' AND expires_at > ?`,
         )
           .bind(signup_token, Math.floor(Date.now() / 1000))
           .first();
@@ -81,7 +87,9 @@ export class SignupComplete extends OpenAPIRoute {
         if (tokenRecord) {
           userId = tokenRecord.user_id as string;
           // Delete the token after use
-          await c.env.GENERAL_DB.prepare("DELETE FROM challenges WHERE challenge = ?")
+          await c.env.GENERAL_DB.prepare(
+            "DELETE FROM challenges WHERE challenge = ?",
+          )
             .bind(signup_token)
             .run();
         }
@@ -90,12 +98,14 @@ export class SignupComplete extends OpenAPIRoute {
       if (!userId) {
         return c.json(
           { success: false, error: "Invalid or expired signup token" },
-          400
+          400,
         );
       }
 
       // Get user details
-      const user = await c.env.GENERAL_DB.prepare("SELECT * FROM users WHERE id = ?")
+      const user = await c.env.GENERAL_DB.prepare(
+        "SELECT * FROM users WHERE id = ?",
+      )
         .bind(userId)
         .first();
 
@@ -107,7 +117,7 @@ export class SignupComplete extends OpenAPIRoute {
       if (user.password_hash) {
         return c.json(
           { success: false, error: "Account already completed" },
-          400
+          400,
         );
       }
 
@@ -124,35 +134,39 @@ export class SignupComplete extends OpenAPIRoute {
       let photoUrl: string | null = null;
       if (profile_photo) {
         // Check if it's a base64 encoded image (custom upload)
-        if (profile_photo.startsWith('data:image/')) {
+        if (profile_photo.startsWith("data:image/")) {
           // Upload to R2
           if (c.env.PROFILE_PHOTOS) {
             try {
               // Extract base64 data and mime type
-              const matches = profile_photo.match(/^data:image\/(\w+);base64,(.+)$/);
+              const matches = profile_photo.match(
+                /^data:image\/(\w+);base64,(.+)$/,
+              );
               if (matches) {
                 const [, imageType, base64Data] = matches;
-                const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-                
+                const imageBuffer = Uint8Array.from(atob(base64Data), (c) =>
+                  c.charCodeAt(0),
+                );
+
                 // Generate unique filename
                 const extension = imageType.toLowerCase();
-                const filename = profile_photo_filename 
+                const filename = profile_photo_filename
                   ? `${userId}-${Date.now()}-${profile_photo_filename}`
                   : `${userId}-${Date.now()}.${extension}`;
                 const key = `profiles/${filename}`;
-                
+
                 // Upload to R2
                 await c.env.PROFILE_PHOTOS.put(key, imageBuffer, {
                   httpMetadata: {
                     contentType: `image/${imageType}`,
                   },
                 });
-                
+
                 // Construct public URL (adjust domain as needed)
                 photoUrl = `https://profile-photos.sctcoding.club/${key}`;
               }
             } catch (uploadError) {
-              console.error('R2 upload error:', uploadError);
+              console.error("R2 upload error:", uploadError);
               // Continue without profile photo if upload fails
             }
           }
@@ -166,23 +180,59 @@ export class SignupComplete extends OpenAPIRoute {
       await c.env.GENERAL_DB.prepare(
         `UPDATE users 
          SET password_hash = ?, profile_photo_url = COALESCE(?, profile_photo_url), updated_at = ?
-         WHERE id = ?`
+         WHERE id = ?`,
+      )
+        .bind(passwordHash, photoUrl, Math.floor(Date.now() / 1000), userId)
+        .run();
+
+      // Generate access token (15 minutes)
+      const accessToken = await generateJWT(
+        user.id as string,
+        user.email as string,
+        user.name as string,
+        c.env.JWT_SECRET,
+        15 * 60, // 15 minutes
+      );
+
+      // Generate refresh token (30 days)
+      const refreshToken = await generateRefreshToken(
+        user.id as string,
+        c.env.JWT_SECRET,
+        30 * 24 * 60 * 60, // 30 days
+      );
+
+      // Store refresh token in database
+      const tokenHash = await hashRefreshToken(refreshToken);
+      const now = Math.floor(Date.now() / 1000);
+      const expiresAt = now + 30 * 24 * 60 * 60;
+
+      await c.env.GENERAL_DB.prepare(
+        "INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)",
       )
         .bind(
-          passwordHash,
-          photoUrl,
-          Math.floor(Date.now() / 1000),
-          userId
+          crypto.randomUUID(),
+          user.id,
+          tokenHash,
+          expiresAt,
+          now,
+          c.req.header("cf-connecting-ip") || null,
+          c.req.header("user-agent") || null,
         )
         .run();
 
       return c.json({
         success: true,
         data: {
-          user_id: userId,
-          email: user.email as string,
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_in: 900, // 15 minutes in seconds
+          user: {
+            id: user.id as string,
+            email: user.email as string,
+            name: user.name as string,
+            profile_photo_url: photoUrl,
+          },
           message: "Account setup completed successfully",
-          profile_photo_url: photoUrl,
         },
       });
     } catch (error) {
