@@ -8,6 +8,7 @@ import { PasskeyRegisterVerify } from "./passkeyRegisterVerify";
 import { PasskeyLoginStart } from "./passkeyLoginStart";
 import { PasskeyLoginVerify } from "./passkeyLoginVerify";
 import { GetCurrentUser } from "./getCurrentUser";
+import { UpdateProfile } from "./updateProfile";
 import { Logout } from "./logout";
 import { GetPasskeys } from "./getPasskeys";
 import { DeletePasskey } from "./deletePasskey";
@@ -53,6 +54,7 @@ openapi.post("/auth/passkey/login/verify", PasskeyLoginVerify);
 // Session management
 openapi.post("/auth/logout", Logout);
 openapi.get("/auth/me", GetCurrentUser);
+openapi.put("/auth/profile", UpdateProfile);
 
 // Passkey management
 openapi.get("/auth/passkeys", GetPasskeys);

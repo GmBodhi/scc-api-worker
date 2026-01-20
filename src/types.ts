@@ -300,6 +300,28 @@ export const GetCurrentUserResponse = z.object({
   error: z.string().optional(),
 });
 
+export const UpdateProfileRequest = z.object({
+  name: z.string().min(1, "Name cannot be empty").optional(),
+  profile_photo: z.string().nullable().optional(), // base64 data, URL, or null to remove
+  profile_photo_filename: z.string().optional(), // filename for custom uploads
+});
+
+export const UpdateProfileResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      id: z.string(),
+      email: z.string(),
+      name: z.string(),
+      etlab_username: z.string().nullable(),
+      profile_photo_url: z.string().nullable(),
+      created_at: z.number(),
+    })
+    .optional(),
+  message: z.string().optional(),
+  error: z.string().optional(),
+});
+
 export const LogoutResponse = z.object({
   success: z.boolean(),
   message: z.string().optional(),
