@@ -10,6 +10,7 @@ import {
   generateRefreshToken,
   hashRefreshToken,
 } from "../../utils/jwt";
+import { EmailService } from "../../services/emailService";
 
 /**
  * POST /api/v3/auth/signup/complete
@@ -57,8 +58,13 @@ export class SignupComplete extends OpenAPIRoute {
 
   async handle(c: AppContext) {
     const data = await this.getValidatedData<typeof this.schema>();
-    const { signup_token, password, profile_photo, profile_photo_filename } =
-      data.body;
+    const {
+      signup_token,
+      password,
+      phone,
+      profile_photo,
+      profile_photo_filename,
+    } = data.body;
 
     try {
       // Verify signup token
@@ -179,11 +185,30 @@ export class SignupComplete extends OpenAPIRoute {
       // Update user with password and profile photo
       await c.env.GENERAL_DB.prepare(
         `UPDATE users 
-         SET password_hash = ?, profile_photo_url = COALESCE(?, profile_photo_url), updated_at = ?
+         SET password_hash = ?, phone = ?, profile_photo_url = COALESCE(?, profile_photo_url), updated_at = ?
          WHERE id = ?`,
       )
-        .bind(passwordHash, photoUrl, Math.floor(Date.now() / 1000), userId)
+        .bind(
+          passwordHash,
+          phone || null,
+          photoUrl,
+          Math.floor(Date.now() / 1000),
+          userId,
+        )
         .run();
+
+      // Send welcome email
+      try {
+        const emailService = new EmailService(c.env.BREVO_API_KEY);
+        await emailService.sendWelcomeEmail(
+          user.name as string,
+          user.email as string,
+        );
+        console.log("Welcome email sent to:", user.email);
+      } catch (emailError) {
+        // Don't fail signup if email fails
+        console.error("Failed to send welcome email:", emailError);
+      }
 
       // Generate access token (15 minutes)
       const accessToken = await generateJWT(

@@ -13,6 +13,9 @@ import { Logout } from "./logout";
 import { GetPasskeys } from "./getPasskeys";
 import { DeletePasskey } from "./deletePasskey";
 import { RefreshToken } from "./refreshToken";
+import { EventSignup } from "./eventSignup";
+import { PasswordResetRequest } from "./passwordResetRequest";
+import { PasswordResetVerify } from "./passwordResetVerify";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -45,6 +48,10 @@ openapi.post("/auth/signup/complete", SignupComplete);
 openapi.post("/auth/login", Login);
 openapi.post("/auth/refresh", RefreshToken);
 
+// Password Reset
+openapi.post("/auth/password/reset", PasswordResetRequest);
+openapi.post("/auth/password/reset/verify", PasswordResetVerify);
+
 // Auth routes - Passkey
 openapi.post("/auth/passkey/register/start", PasskeyRegisterStart);
 openapi.post("/auth/passkey/register/verify", PasskeyRegisterVerify);
@@ -59,5 +66,8 @@ openapi.put("/auth/profile", UpdateProfile);
 // Passkey management
 openapi.get("/auth/passkeys", GetPasskeys);
 openapi.delete("/auth/passkeys/:credential_id", DeletePasskey);
+
+// Events
+openapi.post("/events/hackerrank_1", EventSignup);
 
 export default openapi;

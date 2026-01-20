@@ -63,7 +63,9 @@ export class UpdateProfile extends OpenAPIRoute {
   async handle(c: AppContext) {
     try {
       // Authenticate user
-      const user = await requireAuth(c);
+      const AuthContext = await requireAuth(c);
+
+      const user = AuthContext?.user;
 
       if (!user) {
         return c.json(
@@ -73,16 +75,49 @@ export class UpdateProfile extends OpenAPIRoute {
       }
 
       const data = await this.getValidatedData<typeof this.schema>();
-      const { name, profile_photo, profile_photo_filename } = data.body;
+      const { name, email, phone, profile_photo, profile_photo_filename } =
+        data.body;
 
       // Build update fields
       const updates: string[] = [];
       const bindings: any[] = [];
 
+      // Update email if provided
+      if (email !== undefined && email.trim()) {
+        // Check if email is already taken by another user
+        const existingUser = await c.env.GENERAL_DB.prepare(
+          "SELECT id FROM users WHERE email = ? AND id != ?",
+        )
+          .bind(email.trim(), user.id)
+          .first();
+
+        if (existingUser) {
+          return c.json(
+            { success: false, error: "Email is already in use" },
+            400,
+          );
+        }
+
+        updates.push("email = ?");
+        bindings.push(email.trim());
+      }
+
       // Update name if provided
       if (name !== undefined && name.trim()) {
         updates.push("name = ?");
         bindings.push(name.trim());
+      }
+
+      // Update phone if provided
+      if (phone !== undefined) {
+        if (phone.trim()) {
+          updates.push("phone = ?");
+          bindings.push(phone.trim());
+        } else {
+          // Allow clearing phone number
+          updates.push("phone = ?");
+          bindings.push(null);
+        }
       }
 
       // Handle profile photo update

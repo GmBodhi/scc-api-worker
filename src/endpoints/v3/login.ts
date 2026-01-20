@@ -66,7 +66,7 @@ export class Login extends OpenAPIRoute {
         .first();
 
       if (!user) {
-        return c.json({ success: false, error: "Invalid credentials" }, 401);
+        return c.json({ success: false, error: "No user found with the provided email" }, 401);
       }
 
       // Hash provided password and compare

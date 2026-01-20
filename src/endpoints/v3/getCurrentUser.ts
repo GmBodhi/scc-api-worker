@@ -45,7 +45,8 @@ export class GetCurrentUser extends OpenAPIRoute {
   async handle(c: AppContext) {
     try {
       // Authenticate user (supports both JWT and session)
-      const user = await requireAuth(c);
+      const AuthContext = await requireAuth(c);
+      const user = AuthContext?.user;
 
       if (!user) {
         return c.json(

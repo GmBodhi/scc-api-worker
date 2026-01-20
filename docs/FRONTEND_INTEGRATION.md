@@ -24,7 +24,7 @@ Base URL: `https://api.sctcoding.club`
 ### Profile Management 🆕
 
 - `GET /api/v3/auth/me` - Get current user details
-- `PUT /api/v3/auth/profile` - Update profile (name, photo)
+- `PUT /api/v3/auth/profile` - Update profile (name, email, photo)
 
 ### Passkey Authentication (WebAuthn)
 
@@ -37,6 +37,10 @@ Base URL: `https://api.sctcoding.club`
 
 - `GET /api/v3/auth/passkeys` - List user's registered passkeys
 - `DELETE /api/v3/auth/passkeys/:credential_id` - Delete a passkey
+
+### Events 🆕
+
+- `POST /api/v3/events/hackerrank_1` - Sign up for HackerRank event (requires auth)
 
 **Legend:** 🆕 = New endpoint | 🔒 = Requires authentication
 
@@ -71,13 +75,16 @@ UUID-based session tokens stored in database. Works the same way from client per
 
 1. **User navigates to profile edit page**
 2. **Load current user data**: `GET /api/v3/auth/me`
-3. **User modifies name or uploads new photo**
+3. **User modifies name, email, or uploads new photo**
 4. **Submit changes**: `PUT /api/v3/auth/profile`
 5. **Display success message and updated profile**
 
 ```typescript
 // Example: Update just the name
 await authAPI.updateProfile({ name: "New Name" });
+
+// Example: Update email
+await authAPI.updateProfile({ email: "newemail@example.com" });
 
 // Example: Upload new photo
 const base64Photo = await convertFileToBase64(photoFile);
@@ -89,9 +96,10 @@ await authAPI.updateProfile({
 // Example: Remove photo
 await authAPI.updateProfile({ profile_photo: null });
 
-// Example: Update name and photo together
+// Example: Update everything together
 await authAPI.updateProfile({
   name: "New Name",
+  email: "newemail@example.com",
   profile_photo: base64Photo,
   profile_photo_filename: photoFile.name,
 });
@@ -121,9 +129,37 @@ const updatedPasskeys = await authAPI.listPasskeys();
 1. **Signup**: EtLab verify → Complete signup
 2. **Auto-login**: Receive JWT token + user data
 3. **View profile**: Show user info with photo
-4. **Edit profile**: Update name/photo as needed
+4. **Edit profile**: Update name/email/photo as needed
 5. **Add passkey**: Register for passwordless login
 6. **Manage security**: View/delete passkeys
+
+### Event Registration Flow
+
+1. **User navigates to event page**
+2. **User clicks "Register" (requires login)**
+3. **Pre-fill form**: Name and email from user profile
+4. **User completes**: Phone and batch information
+5. **Submit registration**: `POST /api/v3/events/hackerrank_1`
+6. **Confirmation**: Show success message
+
+```typescript
+// Example: Event signup
+await authAPI.signupForEvent({
+  name: user.name,
+  email: user.email,
+  phone: "1234567890",
+  batch: "2024"
+});
+
+// Handle duplicate registration
+try {
+  await authAPI.signupForEvent({...});
+} catch (error) {
+  if (error.message === "Already registered for this event") {
+    // Show message that user is already registered
+  }
+}
+```
 
 ## API Endpoints
 
@@ -267,10 +303,18 @@ Content-Type: application/json
 
 {
   "name": "Updated Name",  // optional
+  "email": "newemail@example.com",  // optional
   "profile_photo": "<base64-image-or-url>",  // optional
   "profile_photo_filename": "avatar.jpg"  // optional
 }
 ```
+
+**Updatable Fields:**
+
+- **name**: User's display name (must not be empty if provided)
+- **email**: User's email address (must be valid and not already in use)
+- **profile_photo**: Profile photo (see options below)
+- **profile_photo_filename**: Optional filename for base64 uploads
 
 **Profile Photo Options:**
 
@@ -286,7 +330,7 @@ Response:
   "success": true,
   "data": {
     "id": "user-id",
-    "email": "john@example.com",
+    "email": "newemail@example.com",
     "name": "Updated Name",
     "etlab_username": "johndoe",
     "profile_photo_url": "https://profile-photos.sctcoding.club/profiles/...",
@@ -300,8 +344,9 @@ Response:
 
 - All fields are optional - only include what you want to update
 - Name must not be empty if provided
+- Email must be valid and not already taken by another user
 - Profile photos are automatically optimized and stored in R2
-- Returns 400 if no valid fields to update
+- Returns 400 if no valid fields to update or if email is already in use
 - Returns 401 if not authenticated
 
 ### Passkey Management
@@ -359,6 +404,64 @@ Response:
 - Users can delete their own passkeys only
 - Returns 404 if passkey not found or doesn't belong to user
 - Returns 401 if not authenticated
+
+### Events
+
+#### Sign Up for HackerRank Event
+
+```http
+POST /api/v3/events/hackerrank_1
+Authorization: Bearer <your-token>
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "phone": "1234567890",
+  "batch": "2024"
+}
+```
+
+**Required Fields:**
+
+- **name**: Participant's full name
+- **email**: Valid email address
+- **phone**: Phone number (minimum 10 digits)
+- **batch**: Batch or year (e.g., "2024", "S6")
+
+**Notes:**
+
+- This endpoint is specific to the HackerRank event
+- Event ID is automatically set to "hackerrank_1"
+- Registration ID uses HR1\_ prefix for easy identification
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "registration_id": "HR1_1703001600_ABC123",
+    "event_id": "hackerrank_1",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone": "1234567890",
+    "batch": "2024",
+    "registered_at": 1703001600,
+    "status": "confirmed"
+  },
+  "message": "Successfully registered for HackerRank event"
+}
+```
+
+**Additional Notes:**
+
+- Requires authentication (JWT token)
+- Prevents duplicate registrations (returns 400 if already registered)
+- Status is automatically set to "confirmed"
+- Returns registration ID with HR1\_ prefix for HackerRank event
+- User ID is automatically linked from authentication token
+- Event ID is hardcoded to "hackerrank_1"
 
 ## TypeScript Integration
 
@@ -491,6 +594,7 @@ class AuthAPI {
 
   async updateProfile(updates: {
     name?: string;
+    email?: string;
     profile_photo?: string | null;
     profile_photo_filename?: string;
   }): Promise<User> {
@@ -536,6 +640,42 @@ class AuthAPI {
         method: "DELETE",
       },
     );
+  }
+
+  async signupForEvent(eventData: {
+    name: string;
+    email: string;
+    phone: string;
+    batch: string;
+  }): Promise<{
+    registration_id: string;
+    event_id: string;
+    name: string;
+    email: string;
+    phone: string;
+    batch: string;
+    registered_at: number;
+    status: string;
+  }> {
+    const response = await this.request<{
+      success: boolean;
+      data: {
+        registration_id: string;
+        event_id: string;
+        name: string;
+        email: string;
+        phone: string;
+        batch: string;
+        registered_at: number;
+        status: string;
+      };
+      message: string;
+    }>("/api/v3/events/hackerrank_1", {
+      method: "POST",
+      body: JSON.stringify(eventData),
+    });
+
+    return response.data;
   }
 
   logout() {
@@ -585,6 +725,7 @@ interface AuthContextType {
   ) => Promise<void>;
   updateProfile: (updates: {
     name?: string;
+    email?: string;
     profile_photo?: string | null;
     profile_photo_filename?: string;
   }) => Promise<void>;
@@ -620,6 +761,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = async (updates: {
     name?: string;
+    email?: string;
     profile_photo?: string | null;
     profile_photo_filename?: string;
   }) => {
@@ -781,6 +923,7 @@ import { useAuth } from '../hooks/useAuth';
 export function ProfileEditPage() {
   const { user, updateProfile } = useAuth();
   const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoFilename, setPhotoFilename] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -837,6 +980,10 @@ export function ProfileEditPage() {
         updates.name = name;
       }
 
+      if (email !== user?.email) {
+        updates.email = email;
+      }
+
       if (photo !== null) {
         updates.profile_photo = photo;
         updates.profile_photo_filename = photoFilename;
@@ -881,6 +1028,18 @@ export function ProfileEditPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="your@email.com"
             required
           />
         </div>
@@ -1017,6 +1176,117 @@ export function PasskeyManagementPage() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+```
+
+```typescript
+// pages/EventSignup.tsx
+import { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { authAPI } from '../api/auth';
+
+export function EventSignupPage() {
+  const { user } = useAuth();
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState('');
+  const [batch, setBatch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      await authAPI.signupForEvent({
+        name,
+        email,
+        phone,
+        batch,
+      });
+      setSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="success-message">
+        <h2>Registration Successful!</h2>
+        <p>You have successfully registered for the HackerRank event.</p>
+        <p>Check your email for confirmation details.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="event-signup">
+      <h2>HackerRank Event Registration</h2>
+
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="name">Full Name</label>
+          <input
+            id="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your full name"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="your@email.com"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="phone">Phone Number</label>
+          <input
+            id="phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="1234567890"
+            required
+            minLength={10}
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="batch">Batch/Year</label>
+          <input
+            id="batch"
+            type="text"
+            value={batch}
+            onChange={(e) => setBatch(e.target.value)}
+            placeholder="e.g., 2024, S6"
+            required
+          />
+        </div>
+
+        {error && <div className="error">{error}</div>}
+
+        <button type="submit" disabled={loading}>
+          {loading ? 'Registering...' : 'Register for Event'}
+        </button>
+      </form>
     </div>
   );
 }
@@ -1178,7 +1448,11 @@ await authAPI.updateProfile({
 **Frontend validation:**
 
 ```typescript
-function validateProfileUpdate(name?: string, photo?: File | null) {
+function validateProfileUpdate(
+  name?: string,
+  email?: string,
+  photo?: File | null,
+) {
   const errors: string[] = [];
 
   // Name validation
@@ -1188,6 +1462,17 @@ function validateProfileUpdate(name?: string, photo?: File | null) {
     }
     if (name.length > 100) {
       errors.push("Name must be less than 100 characters");
+    }
+  }
+
+  // Email validation
+  if (email !== undefined) {
+    if (email.trim().length === 0) {
+      errors.push("Email cannot be empty");
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      errors.push("Email must be valid");
     }
   }
 
@@ -1204,8 +1489,10 @@ function validateProfileUpdate(name?: string, photo?: File | null) {
 **Backend errors:**
 | Error | Reason | Solution |
 |-------|--------|----------|
-| `No valid fields to update` | Request doesn't include any updatable fields | Include at least one field: name or profile_photo |
+| `No valid fields to update` | Request doesn't include any updatable fields | Include at least one field: name, email, or profile_photo |
 | `Name cannot be empty` | Provided name is empty string | Provide a valid name |
+| `Email is already in use` | Another user has this email | Choose a different email address |
+| `Valid email is required` | Email format is invalid | Provide a valid email address |
 | `Failed to upload profile photo` | R2 upload failed | Check image format, try again |
 | `Invalid or expired token` | Authentication failed | User needs to login again |
 
@@ -1215,6 +1502,55 @@ function validateProfileUpdate(name?: string, photo?: File | null) {
 | Error | Reason | Solution |
 |-------|--------|----------|
 | `Passkey not found` | Credential ID doesn't exist or doesn't belong to user | Refresh passkey list |
+| `Invalid or expired token` | Authentication failed | User needs to login again |
+
+### Event Signup Validation
+
+**Frontend validation:**
+
+```typescript
+function validateEventSignup(data: {
+  name: string;
+  email: string;
+  phone: string;
+  batch: string;
+}) {
+  const errors: string[] = [];
+
+  // Name validation
+  if (data.name.trim().length === 0) {
+    errors.push("Name is required");
+  }
+
+  // Email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(data.email)) {
+    errors.push("Valid email is required");
+  }
+
+  // Phone validation
+  if (data.phone.length < 10) {
+    errors.push("Phone number must be at least 10 digits");
+  }
+
+  // Batch validation
+  if (data.batch.trim().length === 0) {
+    errors.push("Batch is required");
+  }
+
+  return errors;
+}
+```
+
+**Backend errors:**
+| Error | Reason | Solution |
+|-------|--------|----------|
+| `Already registered for this event` | User has already signed up | View existing registration |
+| `Name is required` | Empty name field | Provide participant name |
+| `Valid email is required` | Invalid email format | Provide valid email address |
+| `Phone number must be at least 10 digits` | Phone too short | Provide valid phone number |
+| `Batch is required` | Empty batch field | Provide batch/year information |
+| `The email or phone number is already in use for this event` | Duplicate email/phone | Use different email or phone |
 | `Invalid or expired token` | Authentication failed | User needs to login again |
 
 ## Error Handling
@@ -1337,6 +1673,34 @@ describe("Auth Flow", () => {
     // Register a passkey would require WebAuthn mocking
     // Delete would follow similar pattern
   });
+
+  it("should register for event", async () => {
+    // Login
+    await authAPI.login("test@example.com", "password123");
+
+    // Register for event
+    const registration = await authAPI.signupForEvent({
+      name: "Test User",
+      email: "test@example.com",
+      phone: "1234567890",
+      batch: "2024",
+    });
+
+    expect(registration.registration_id).toBeDefined();
+    expect(registration.registration_id).toMatch(/^HR1_/);
+    expect(registration.event_id).toBe("hackerrank_1");
+    expect(registration.status).toBe("confirmed");
+
+    // Try to register again (should fail)
+    await expect(
+      authAPI.signupForEvent({
+        name: "Test User",
+        email: "test@example.com",
+        phone: "1234567890",
+        batch: "2024",
+      }),
+    ).rejects.toThrow("Already registered for this event");
+  });
 });
 ```
 
@@ -1389,9 +1753,45 @@ const passkeys = await authAPI.listPasskeys();
 
 // User can:
 // 1. View their complete profile
-// 2. Edit name and photo
+// 2. Edit name, email, and photo
 // 3. Manage passkeys
 // 4. Control their security
+```
+
+### Event Management 🆕
+
+**What you can do:**
+
+- ✅ Register for HackerRank event with authentication
+- ✅ Pre-fill forms with user profile data
+- ✅ Prevent duplicate registrations automatically
+- ✅ Track registration status and timestamps
+- ✅ Link registrations to user accounts
+
+**Key benefits:**
+
+- Event-specific endpoint - dedicated to HackerRank event
+- Authenticated registrations - know who signed up
+- Automatic duplicate prevention per user
+- User data pre-filled for convenience
+- Registration history linked to accounts
+- Secure and validated submissions
+- HR1\_ prefixed IDs for easy identification
+
+**Example integration:**
+
+```typescript
+// HackerRank event registration
+const { user } = useAuth();
+
+// Pre-fill with user data
+const registration = await authAPI.signupForEvent({
+  name: user.name, // From profile
+  email: user.email, // From profile
+  phone: "1234567890", // User input
+  batch: "2024", // User input
+});
+// Returns: { registration_id: "HR1_...", event_id: "hackerrank_1", ... }
 ```
 
 ## Migration from Old API

@@ -64,8 +64,10 @@ export class DeletePasskey extends OpenAPIRoute {
   async handle(c: AppContext) {
     try {
       // Authenticate user
-      const user = await requireAuth(c);
-      console.log("Authenticated user for delete passkey:", user);
+      const AuthContext = await requireAuth(c);
+
+      const user = AuthContext?.user;
+
 
       if (!user) {
         return c.json(

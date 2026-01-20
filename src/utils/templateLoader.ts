@@ -1,8 +1,12 @@
-import { followUpEmailTemplate } from '../templates/followup-email';
-import { paymentConfirmationTemplate } from '../templates/payment-confirmation';
-import { mentorshipProgramConfirmationTemplate } from '../templates/mentorship-program-confirmation';
-
-export function getFollowUpEmail(variables: { studentName: string; studentId: string }): string {
+import { followUpEmailTemplate } from "../templates/followup-email";
+import { paymentConfirmationTemplate } from "../templates/payment-confirmation";
+import { mentorshipProgramConfirmationTemplate } from "../templates/mentorship-program-confirmation";
+import { getPasswordResetEmail as passwordResetTemplate } from "../templates/password-reset";
+import { getWelcomeEmail as welcomeEmailTemplate } from "../templates/welcome-email";
+export function getFollowUpEmail(variables: {
+  studentName: string;
+  studentId: string;
+}): string {
   return followUpEmailTemplate(variables);
 }
 
@@ -22,3 +26,17 @@ export function getMentorshipProgramConfirmationEmail(variables: {
   return mentorshipProgramConfirmationTemplate(variables);
 }
 
+export function getPasswordResetEmail(variables: {
+  name: string;
+  resetToken: string;
+  expiresIn: string;
+}): string {
+  return passwordResetTemplate(variables);
+}
+
+export function getWelcomeEmail(variables: {
+  name: string;
+  email: string;
+}): string {
+  return welcomeEmailTemplate(variables);
+}

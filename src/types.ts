@@ -128,6 +128,10 @@ export const EtlabVerifyResponse = z.object({
 export const SignupCompleteRequest = z.object({
   signup_token: z.string().min(1, "Signup token is required"),
   password: z.string().min(8, "Password must be at least 8 characters"),
+  phone: z
+    .string()
+    .min(10, "Phone number must be at least 10 digits")
+    .optional(),
   profile_photo: z.string().optional(), // base64 data or URL
   profile_photo_filename: z.string().optional(), // filename for custom uploads
 });
@@ -302,6 +306,11 @@ export const GetCurrentUserResponse = z.object({
 
 export const UpdateProfileRequest = z.object({
   name: z.string().min(1, "Name cannot be empty").optional(),
+  email: z.string().email("Valid email is required").optional(),
+  phone: z
+    .string()
+    .min(10, "Phone number must be at least 10 digits")
+    .optional(),
   profile_photo: z.string().nullable().optional(), // base64 data, URL, or null to remove
   profile_photo_filename: z.string().optional(), // filename for custom uploads
 });
@@ -348,4 +357,49 @@ export const DeletePasskeyResponse = z.object({
   success: z.boolean(),
   message: z.string().optional(),
   error: z.string().optional(),
+});
+
+export const EventSignupRequest = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  batch: z.string().min(1, "Batch is required"),
+});
+
+export const EventSignupResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      registration_id: z.string(),
+      event_id: z.string(),
+      name: z.string(),
+      email: z.string(),
+      phone: z.string(),
+      batch: z.string(),
+      registered_at: z.number(),
+      status: z.string(),
+    })
+    .optional(),
+  message: z.string().optional(),
+  error: z.string().optional(),
+});
+
+// Password Reset
+export const PasswordResetRequestSchema = z.object({
+  email: z.string().email("Valid email is required"),
+});
+
+export const PasswordResetRequestResponse = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+
+export const PasswordResetVerifySchema = z.object({
+  token: z.string().min(1, "Reset token is required"),
+  new_password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+export const PasswordResetVerifyResponse = z.object({
+  success: z.boolean(),
+  message: z.string(),
 });

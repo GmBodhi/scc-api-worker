@@ -1,4 +1,9 @@
-import { getFollowUpEmail, getPaymentConfirmationEmail, getMentorshipProgramConfirmationEmail } from "../utils/templateLoader";
+import {
+  getFollowUpEmail,
+  getPaymentConfirmationEmail,
+  getMentorshipProgramConfirmationEmail,
+  getPasswordResetEmail,
+} from "../utils/templateLoader";
 
 interface EmailOptions {
   to: string;
@@ -14,29 +19,39 @@ export class EmailService {
     this.apiKey = apiKey;
   }
 
-  async sendFollowUpEmail(studentName: string, studentEmail: string, studentId: string): Promise<boolean> {
+  async sendFollowUpEmail(
+    studentName: string,
+    studentEmail: string,
+    studentId: string,
+  ): Promise<boolean> {
     const html = getFollowUpEmail({ studentName, studentId });
 
     return this.sendEmail({
       to: studentEmail,
       toName: studentName,
       subject: "Payment Reminder - Complete Your Registration",
-      html
+      html,
     });
   }
 
-  async sendPaymentConfirmationEmail(studentName: string, studentEmail: string, studentId: string, transactionRef: string): Promise<boolean> {
+  async sendPaymentConfirmationEmail(
+    studentName: string,
+    studentEmail: string,
+    studentId: string,
+    transactionRef: string,
+  ): Promise<boolean> {
     const html = getPaymentConfirmationEmail({
       studentName,
       studentId,
-      transactionRef
+      transactionRef,
     });
 
     return this.sendEmail({
       to: studentEmail,
       toName: studentName,
-      subject: "🎉 Payment Confirmed - SCC Treasure Hunt Registration Complete!",
-      html
+      subject:
+        "🎉 Payment Confirmed - SCC Treasure Hunt Registration Complete!",
+      html,
     });
   }
 
@@ -44,19 +59,52 @@ export class EmailService {
     studentName: string,
     studentEmail: string,
     studentId: string,
-    experienceLevel: string
+    experienceLevel: string,
   ): Promise<boolean> {
     const html = getMentorshipProgramConfirmationEmail({
       studentName,
       studentId,
-      experienceLevel
+      experienceLevel,
     });
 
     return this.sendEmail({
       to: studentEmail,
       toName: studentName,
       subject: "🎉 Registration Confirmed - Mentorship Program 2025",
-      html
+      html,
+    });
+  }
+
+  async sendPasswordResetEmail(
+    name: string,
+    email: string,
+    resetToken: string,
+    expiresIn: string = "15 minutes",
+  ): Promise<boolean> {
+    const html = getPasswordResetEmail({
+      name,
+      resetToken,
+      expiresIn,
+    });
+
+    return this.sendEmail({
+      to: email,
+      toName: name,
+      subject: "🔐 Password Reset Request - SCT Coding Club",
+      html,
+    });
+  }
+  async sendWelcomeEmail(name: string, email: string): Promise<boolean> {
+    const html = getWelcomeEmail({
+      name,
+      email,
+    });
+
+    return this.sendEmail({
+      to: email,
+      toName: name,
+      subject: "🎉 Welcome to SCT Coding Club!",
+      html,
     });
   }
 
@@ -65,20 +113,20 @@ export class EmailService {
       const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: {
-          "accept": "application/json",
+          accept: "application/json",
           "api-key": this.apiKey,
           "content-type": "application/json",
         },
         body: JSON.stringify({
           sender: {
             name: "SCT Coding Club",
-            email: "hello@sctcoding.club"
+            email: "hello@sctcoding.club",
           },
           to: [
             {
               email: options.to,
-              name: options.toName
-            }
+              name: options.toName,
+            },
           ],
           subject: options.subject,
           htmlContent: options.html,
