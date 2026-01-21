@@ -216,7 +216,7 @@ export class UpdateProfile extends OpenAPIRoute {
 
       // Fetch updated user data
       const updatedUser = await c.env.GENERAL_DB.prepare(
-        "SELECT id, email, name, phone, etlab_username, profile_photo_url, created_at FROM users WHERE id = ?",
+        "SELECT id, email, name, phone, etlab_username, profile_photo_url, created_at, is_verified FROM users WHERE id = ?",
       )
         .bind(user.id)
         .first();
@@ -238,6 +238,7 @@ export class UpdateProfile extends OpenAPIRoute {
           etlab_username: (updatedUser.etlab_username as string) || null,
           profile_photo_url: (updatedUser.profile_photo_url as string) || null,
           created_at: updatedUser.created_at as number,
+          is_verified: Boolean(updatedUser.is_verified),
         },
         message: "Profile updated successfully",
       });

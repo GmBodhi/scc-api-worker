@@ -55,16 +55,28 @@ export class GetCurrentUser extends OpenAPIRoute {
         );
       }
 
+      const dbUser = await c.env.GENERAL_DB.prepare("SELECT * FROM users WHERE id = ?")
+        .bind(user.id)
+        .first();
+      
+      if (!dbUser) {
+        return c.json(
+          { success: false, error: "User not found" },
+          404,
+        );
+      }
+
       return c.json({
         success: true,
         data: {
-          id: user.id,
-          email: user.email,
-          phone: user.phone || null,
-          name: user.name,
-          etlab_username: user.etlab_username || null,
-          profile_photo_url: user.profile_photo_url || null,
-          created_at: user.created_at || 0,
+          id: dbUser.id,
+          email: dbUser.email,
+          phone: dbUser.phone || null,
+          name: dbUser.name,
+          etlab_username: dbUser.etlab_username || null,
+          profile_photo_url: dbUser.profile_photo_url || null,
+          created_at: dbUser.created_at || 0,
+          is_verified: dbUser.is_verified || false,
         },
       });
     } catch (error) {

@@ -5,6 +5,7 @@ import {
   EtlabVerifyRequest,
   EtlabVerifyResponse,
 } from "../../types";
+import { requireAuth } from "../../middleware/auth";
 
 interface EtLabProfileData {
   admno: string | null;
@@ -146,11 +147,15 @@ async function getEtLabData(
 
 /**
  * POST /api/v3/auth/etlab/verify
- * Verify Etlab credentials and retrieve user info
+ * Verify Etlab credentials and update existing user with EtLab data
+ * This endpoint is for users who want to link their EtLab account to their existing account
+ * Requires user to be authenticated
  */
 export class EtlabVerify extends OpenAPIRoute {
   schema = {
-    summary: "Verify Etlab credentials and retrieve user info",
+    summary:
+      "Verify Etlab credentials and link to account (requires authentication)",
+    security: [{ bearerAuth: [] }],
     request: {
       body: {
         content: {
@@ -162,7 +167,7 @@ export class EtlabVerify extends OpenAPIRoute {
     },
     responses: {
       "200": {
-        description: "Returns EtLab user information",
+        description: "EtLab account linked successfully",
         content: {
           "application/json": {
             schema: EtlabVerifyResponse,
@@ -170,7 +175,7 @@ export class EtlabVerify extends OpenAPIRoute {
         },
       },
       "400": {
-        description: "Bad request - missing credentials",
+        description: "Bad request - missing credentials or already verified",
         content: {
           "application/json": {
             schema: ErrorResponse,
@@ -178,7 +183,7 @@ export class EtlabVerify extends OpenAPIRoute {
         },
       },
       "401": {
-        description: "Unauthorized - invalid credentials",
+        description: "Unauthorized - invalid credentials or not logged in",
         content: {
           "application/json": {
             schema: ErrorResponse,
@@ -213,19 +218,42 @@ export class EtlabVerify extends OpenAPIRoute {
   };
 
   async handle(c: AppContext) {
+    // Authenticate user first
+    const AuthContext = await requireAuth(c);
+    const user = AuthContext?.user;
+
+    if (!user) {
+      return c.json({ success: false, error: "Authentication required" }, 401);
+    }
+
     const data = await this.getValidatedData<typeof this.schema>();
     const { username, password } = data.body;
 
     try {
-      const user = await c.env.GENERAL_DB.prepare(
-        "SELECT id FROM users WHERE etlab_username = ?",
+      // Check if user is already verified
+      if (user.is_verified) {
+        return c.json(
+          {
+            success: false,
+            error: "Account already verified with EtLab",
+          },
+          400,
+        );
+      }
+
+      // Check if this etlab_username is already used by another user
+      const existingEtlabUser = await c.env.GENERAL_DB.prepare(
+        "SELECT id FROM users WHERE etlab_username = ? AND id != ?",
       )
-        .bind(username)
+        .bind(username, user.id)
         .first();
 
-      if (user) {
+      if (existingEtlabUser) {
         return c.json(
-          { success: false, error: "EtLab account already linked" },
+          {
+            success: false,
+            error: "This EtLab account is already linked to another user",
+          },
           400,
         );
       }
@@ -243,69 +271,27 @@ export class EtlabVerify extends OpenAPIRoute {
             );
           }
 
-          // Check if user already exists
-          const existingUser = await c.env.GENERAL_DB.prepare(
-            "SELECT id FROM users WHERE etlab_username = ? OR email = ?",
+          // Update user with EtLab data and mark as verified
+          await c.env.GENERAL_DB.prepare(
+            `UPDATE users 
+             SET etlab_username = ?, 
+                 is_verified = 1,
+                 profile_photo_url = COALESCE(?, profile_photo_url),
+                 updated_at = ?
+             WHERE id = ?`,
           )
-            .bind(username, result.data.email)
-            .first();
-
-          let userId: string;
-
-          if (existingUser) {
-            // User already exists
-            userId = existingUser.id as string;
-          } else {
-            // Create new user with EtLab data
-            userId = crypto.randomUUID();
-            await c.env.GENERAL_DB.prepare(
-              `INSERT INTO users (id, email, name, etlab_username, profile_photo_url, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            .bind(
+              username,
+              result.data.image || null,
+              Math.floor(Date.now() / 1000),
+              user.id,
             )
-              .bind(
-                userId,
-                result.data.email || `${username}@temp.etlab.sctce.ac.in`,
-                result.data.name || username,
-                username,
-                result.data.image || null,
-                Math.floor(Date.now() / 1000),
-                Math.floor(Date.now() / 1000),
-              )
-              .run();
-          }
-
-          // Generate signup token (valid for 10 minutes)
-          const signupToken = crypto.randomUUID();
-          const expiresAt = Math.floor(Date.now() / 1000) + 600; // 10 minutes
-
-          // Store token in KV or database
-          if (c.env.CHALLENGES) {
-            await c.env.CHALLENGES.put(
-              `signup:${signupToken}`,
-              JSON.stringify({ user_id: userId }),
-              { expirationTtl: 600 },
-            );
-          } else {
-            // Fallback to database if KV not available
-            await c.env.GENERAL_DB.prepare(
-              `INSERT OR REPLACE INTO challenges (challenge, user_id, type, created_at, expires_at)
-               VALUES (?, ?, ?, ?, ?)`,
-            )
-              .bind(
-                signupToken,
-                userId,
-                "signup",
-                Math.floor(Date.now() / 1000),
-                expiresAt,
-              )
-              .run();
-          }
+            .run();
 
           return c.json({
             success: true,
             data: {
-              user_id: userId,
-              signup_token: signupToken,
+              user_id: user.id,
               name: result.data.name,
               email: result.data.email,
               etlab_username: username,
@@ -314,7 +300,9 @@ export class EtlabVerify extends OpenAPIRoute {
               phone: result.data.phone,
               register_no: result.data.reg_no,
               profile_photo_url: result.data.image,
+              is_verified: true,
             },
+            message: "EtLab account linked successfully",
           });
 
         case STATUS_CODES.INVALID_CREDENTIALS:

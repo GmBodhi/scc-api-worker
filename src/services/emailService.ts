@@ -82,17 +82,21 @@ export class EmailService {
     email: string,
     resetToken: string,
     expiresIn: string = "15 minutes",
+    isFirstTimeSetup: boolean = false,
   ): Promise<boolean> {
     const html = getPasswordResetEmail({
       name,
       resetToken,
       expiresIn,
+      isFirstTimeSetup,
     });
 
     return this.sendEmail({
       to: email,
       toName: name,
-      subject: "🔐 Password Reset Request - SCT Coding Club",
+      subject: isFirstTimeSetup
+        ? "🔐 Complete Your Account Setup - SCT Coding Club"
+        : "🔐 Password Reset Request - SCT Coding Club",
       html,
     });
   }

@@ -86,7 +86,7 @@ export class Login extends OpenAPIRoute {
       const accessToken = await generateJWT(
         user.id as string,
         user.email as string,
-        user.phone as string | null,
+        user.phone as string,
         user.name as string,
         c.env.JWT_SECRET,
         15 * 60, // 15 minutes
@@ -130,6 +130,7 @@ export class Login extends OpenAPIRoute {
             phone: user.phone,
             name: user.name,
             profile_photo_url: user.profile_photo_url,
+            is_verified: user.is_verified,
           },
         },
       });

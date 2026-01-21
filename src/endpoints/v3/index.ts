@@ -1,7 +1,7 @@
 import { fromHono } from "chanfana";
 import { Hono } from "hono";
+import { Signup } from "./signup";
 import { EtlabVerify } from "./etlabVerify";
-import { SignupComplete } from "./signupComplete";
 import { Login } from "./login";
 import { PasskeyRegisterStart } from "./passkeyRegisterStart";
 import { PasskeyRegisterVerify } from "./passkeyRegisterVerify";
@@ -49,8 +49,8 @@ const openapi = fromHono(app, {
 });
 
 // Auth routes - Traditional
+openapi.post("/auth/signup", Signup);
 openapi.post("/auth/etlab/verify", EtlabVerify);
-openapi.post("/auth/signup/complete", SignupComplete);
 openapi.post("/auth/login", Login);
 openapi.post("/auth/refresh", RefreshToken);
 

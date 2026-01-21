@@ -57,9 +57,9 @@ export class PasswordResetRequest extends OpenAPIRoute {
       const data = await this.getValidatedData<typeof this.schema>();
       const { email } = data.body;
 
-      // Find user by email
+      // Find user by email - also check if they have a password
       const user = await c.env.GENERAL_DB.prepare(
-        "SELECT id, name, email FROM users WHERE email = ?",
+        "SELECT id, name, email, password_hash FROM users WHERE email = ?",
       )
         .bind(email)
         .first();
@@ -79,6 +79,9 @@ export class PasswordResetRequest extends OpenAPIRoute {
           .bind(resetToken, user.id, expiresAt, Math.floor(Date.now() / 1000))
           .run();
 
+        // Detect if this is first-time password setup (for users who verified EtLab but never completed signup)
+        const isFirstTimeSetup = !user.password_hash;
+
         // Send password reset email
         const emailService = new EmailService(c.env.BREVO_API_KEY);
         await emailService.sendPasswordResetEmail(
@@ -86,9 +89,15 @@ export class PasswordResetRequest extends OpenAPIRoute {
           user.email as string,
           resetToken,
           "15 minutes",
+          isFirstTimeSetup, // Pass flag to customize email message
         );
 
-        console.log("Password reset requested for:", email);
+        console.log(
+          isFirstTimeSetup
+            ? "First-time password setup requested for:"
+            : "Password reset requested for:",
+          email,
+        );
       } else {
         console.log("Password reset attempted for non-existent email:", email);
       }

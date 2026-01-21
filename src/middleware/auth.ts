@@ -14,6 +14,7 @@ export interface AuthUser {
   etlab_username?: string | null;
   profile_photo_url?: string | null;
   created_at?: number;
+  is_verified?: boolean;
 }
 
 export interface AuthResult {
@@ -45,7 +46,7 @@ export async function authenticate(c: AppContext): Promise<AuthResult> {
 
   // Fetch full user data from database
   const user = await c.env.GENERAL_DB.prepare(
-    "SELECT id, email, name, etlab_username, profile_photo_url, created_at FROM users WHERE id = ?",
+    "SELECT id, email, name, etlab_username, profile_photo_url, created_at, is_verified FROM users WHERE id = ?",
   )
     .bind(jwtPayload.sub)
     .first();
@@ -63,6 +64,7 @@ export async function authenticate(c: AppContext): Promise<AuthResult> {
       etlab_username: user.etlab_username as string | null,
       profile_photo_url: user.profile_photo_url as string | null,
       created_at: user.created_at as number,
+      is_verified: Boolean(user.is_verified),
     },
   };
 }

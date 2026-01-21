@@ -104,42 +104,19 @@ export const TransactionCheckResponse = z.object({
 });
 
 // V3 Auth schemas
-export const EtlabVerifyRequest = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
-});
-
-export const EtlabVerifyResponse = z.object({
-  success: z.boolean(),
-  data: z
-    .object({
-      user_id: z.string(),
-      signup_token: z.string(),
-      name: z.string().nullable(),
-      email: z.string().nullable(),
-      etlab_username: z.string(),
-      admission_no: z.string().nullable(),
-      batch: z.string().nullable(),
-      phone: z.string().nullable(),
-      register_no: z.string().nullable(),
-      profile_photo_url: z.string().nullable(),
-    })
-    .optional(),
-  error: z.string().optional(),
-});
-
-export const SignupCompleteRequest = z.object({
-  signup_token: z.string().min(1, "Signup token is required"),
+export const SignupRequest = z.object({
+  email: z.string().email("Valid email is required"),
+  name: z.string().min(1, "Name is required"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   phone: z
     .string()
     .min(10, "Phone number must be at least 10 digits")
     .optional(),
   profile_photo: z.string().optional(), // base64 data or URL
-  profile_photo_filename: z.string().optional(), // filename for custom uploads
+  profile_photo_filename: z.string().optional(),
 });
 
-export const SignupCompleteResponse = z.object({
+export const SignupResponse = z.object({
   success: z.boolean(),
   data: z
     .object({
@@ -150,11 +127,38 @@ export const SignupCompleteResponse = z.object({
         id: z.string(),
         email: z.string(),
         name: z.string(),
+        phone: z.string().nullable(),
         profile_photo_url: z.string().nullable(),
+        is_verified: z.boolean(),
       }),
-      message: z.string(),
     })
     .optional(),
+  message: z.string().optional(),
+  error: z.string().optional(),
+});
+
+export const EtlabVerifyRequest = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export const EtlabVerifyResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      user_id: z.string(),
+      name: z.string().nullable(),
+      email: z.string().nullable(),
+      etlab_username: z.string(),
+      admission_no: z.string().nullable(),
+      batch: z.string().nullable(),
+      phone: z.string().nullable(),
+      register_no: z.string().nullable(),
+      profile_photo_url: z.string().nullable(),
+      is_verified: z.boolean(),
+    })
+    .optional(),
+  message: z.string().optional(),
   error: z.string().optional(),
 });
 
@@ -302,6 +306,7 @@ export const GetCurrentUserResponse = z.object({
       etlab_username: z.string().nullable(),
       profile_photo_url: z.string().nullable(),
       created_at: z.number(),
+      is_verified: z.boolean(),
     })
     .optional(),
   error: z.string().optional(),
@@ -329,6 +334,7 @@ export const UpdateProfileResponse = z.object({
       etlab_username: z.string().nullable(),
       profile_photo_url: z.string().nullable(),
       created_at: z.number(),
+      is_verified: z.boolean(),
     })
     .optional(),
   message: z.string().optional(),

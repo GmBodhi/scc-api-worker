@@ -31,6 +31,7 @@ export function getPasswordResetEmail(variables: {
   name: string;
   resetToken: string;
   expiresIn: string;
+  isFirstTimeSetup?: boolean;
 }): string {
   return passwordResetTemplate(variables);
 }

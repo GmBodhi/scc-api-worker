@@ -91,6 +91,8 @@ export class PasswordResetVerify extends OpenAPIRoute {
       const passwordHash = await this.hashPassword(new_password);
 
       // Update user's password
+      // Note: This also works for first-time password setup for users who
+      // verified EtLab but never completed the signup process (no password_hash exists)
       await c.env.GENERAL_DB.prepare(
         "UPDATE users SET password_hash = ? WHERE id = ?",
       )

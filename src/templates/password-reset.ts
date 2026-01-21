@@ -2,10 +2,12 @@ interface PasswordResetEmailData {
   name: string;
   resetToken: string;
   expiresIn: string; // e.g., "15 minutes"
+  isFirstTimeSetup?: boolean; // For users who verified EtLab but never set password
 }
 
 export function getPasswordResetEmail(data: PasswordResetEmailData): string {
   const resetUrl = `https://sctcoding.club/reset-password?token=${data.resetToken}`;
+  const isFirstTimeSetup = data.isFirstTimeSetup || false;
 
   return `
 <!DOCTYPE html>
@@ -99,15 +101,19 @@ export function getPasswordResetEmail(data: PasswordResetEmailData): string {
       <div class="logo">🔐 SCT Coding Club</div>
     </div>
     
-    <h1>Reset Your Password</h1>
+    <h1>${isFirstTimeSetup ? "Complete Your Account Setup" : "Reset Your Password"}</h1>
     
     <div class="content">
       <p>Hi ${data.name},</p>
       
-      <p>We received a request to reset your password for your SCT Coding Club account. Click the button below to create a new password:</p>
+      ${
+        isFirstTimeSetup
+          ? `<p>We see you verified your EtLab account but haven't set up a password yet. Click the button below to complete your account setup and create a password:</p>`
+          : `<p>We received a request to reset your password for your SCT Coding Club account. Click the button below to create a new password:</p>`
+      }
       
       <div style="text-align: center;">
-        <a href="${resetUrl}" class="button">Reset Password</a>
+        <a href="${resetUrl}" class="button">${isFirstTimeSetup ? "Set Up Password" : "Reset Password"}</a>
       </div>
       
       <p>Or copy and paste this link into your browser:</p>
@@ -121,13 +127,21 @@ export function getPasswordResetEmail(data: PasswordResetEmailData): string {
       <ul>
         <li>Never share your password with anyone</li>
         <li>Use a strong, unique password</li>
-        <li>If you didn't request this reset, ignore this email</li>
-        <li>Your password will remain unchanged until you create a new one</li>
+        ${
+          isFirstTimeSetup
+            ? "<li>After setting your password, you can log in anytime</li>"
+            : "<li>If you didn't request this reset, ignore this email</li>"
+        }
+        ${!isFirstTimeSetup ? "<li>Your password will remain unchanged until you create a new one</li>" : ""}
       </ul>
     </div>
     
     <div class="footer">
-      <p>If you didn't request a password reset, you can safely ignore this email.</p>
+      ${
+        isFirstTimeSetup
+          ? "<p>If you didn't create an account with us, you can safely ignore this email.</p>"
+          : "<p>If you didn't request a password reset, you can safely ignore this email.</p>"
+      }
       <p style="margin-top: 10px;">© ${new Date().getFullYear()} SCT Coding Club. All rights reserved.</p>
     </div>
   </div>
