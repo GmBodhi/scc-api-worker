@@ -116,7 +116,7 @@ export class EventSignup extends OpenAPIRoute {
           phone,
           batch,
           now,
-          "confirmed",
+          "payment-pending",
         )
         .run()
         .catch((e) => ({ error: true, details: e.message }));
@@ -124,7 +124,10 @@ export class EventSignup extends OpenAPIRoute {
       if ("error" in res) {
         console.error("Database error:", res);
         return c.json(
-          { success: false, error: "The email or phone number is already in use for this event" },
+          {
+            success: false,
+            error: "The email or phone number is already in use for this event",
+          },
           400,
         );
       }
@@ -146,9 +149,10 @@ export class EventSignup extends OpenAPIRoute {
             phone,
             batch,
             registered_at: now,
-            status: "confirmed",
+            status: "payment-pending",
           },
-          message: "Successfully registered for HackerRank event",
+          message:
+            "Registration successful. Please complete payment to confirm.",
         },
         201,
       );

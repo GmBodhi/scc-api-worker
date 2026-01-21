@@ -3,6 +3,7 @@ import { paymentConfirmationTemplate } from "../templates/payment-confirmation";
 import { mentorshipProgramConfirmationTemplate } from "../templates/mentorship-program-confirmation";
 import { getPasswordResetEmail as passwordResetTemplate } from "../templates/password-reset";
 import { getWelcomeEmail as welcomeEmailTemplate } from "../templates/welcome-email";
+import { getHackerRankPaymentConfirmationEmail as hackerRankPaymentTemplate } from "../templates/hackerrank-payment-confirmation";
 export function getFollowUpEmail(variables: {
   studentName: string;
   studentId: string;
@@ -39,4 +40,12 @@ export function getWelcomeEmail(variables: {
   email: string;
 }): string {
   return welcomeEmailTemplate(variables);
+}
+
+export function getHackerRankPaymentConfirmationEmail(variables: {
+  name: string;
+  registrationId: string;
+  transactionRef: string;
+}): string {
+  return hackerRankPaymentTemplate(variables);
 }

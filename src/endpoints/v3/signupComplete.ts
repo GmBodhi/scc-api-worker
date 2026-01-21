@@ -214,6 +214,7 @@ export class SignupComplete extends OpenAPIRoute {
       const accessToken = await generateJWT(
         user.id as string,
         user.email as string,
+        phone as string | null,
         user.name as string,
         c.env.JWT_SECRET,
         15 * 60, // 15 minutes
@@ -254,6 +255,7 @@ export class SignupComplete extends OpenAPIRoute {
           user: {
             id: user.id as string,
             email: user.email as string,
+            phone: phone || null,
             name: user.name as string,
             profile_photo_url: photoUrl,
           },

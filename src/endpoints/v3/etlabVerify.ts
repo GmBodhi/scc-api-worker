@@ -38,7 +38,7 @@ const ETLAB_BASE_URL = "https://sctce.etlab.in";
  */
 async function makeEtLabRequest(
   url: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT);
@@ -69,7 +69,7 @@ async function makeEtLabRequest(
  */
 async function getEtLabData(
   username: string,
-  password: string
+  password: string,
 ): Promise<EtLabResponse> {
   try {
     // Step 1: Login
@@ -81,7 +81,7 @@ async function getEtLabData(
           username: username,
           password: password,
         }),
-      }
+      },
     );
 
     if (!loginResponse.ok) {
@@ -102,7 +102,7 @@ async function getEtLabData(
         headers: {
           Authorization: `Bearer ${loginData.access_token}`,
         },
-      }
+      },
     );
 
     if (!detailsResponse.ok) {
@@ -217,6 +217,19 @@ export class EtlabVerify extends OpenAPIRoute {
     const { username, password } = data.body;
 
     try {
+      const user = await c.env.GENERAL_DB.prepare(
+        "SELECT id FROM users WHERE etlab_username = ?",
+      )
+        .bind(username)
+        .first();
+
+      if (user) {
+        return c.json(
+          { success: false, error: "EtLab account already linked" },
+          400,
+        );
+      }
+
       // Call EtLab API
       const result = await getEtLabData(username, password);
 
@@ -226,13 +239,13 @@ export class EtlabVerify extends OpenAPIRoute {
           if (!result.data) {
             return c.json(
               { success: false, error: "No data returned from EtLab" },
-              500
+              500,
             );
           }
 
           // Check if user already exists
           const existingUser = await c.env.GENERAL_DB.prepare(
-            "SELECT id FROM users WHERE etlab_username = ? OR email = ?"
+            "SELECT id FROM users WHERE etlab_username = ? OR email = ?",
           )
             .bind(username, result.data.email)
             .first();
@@ -247,7 +260,7 @@ export class EtlabVerify extends OpenAPIRoute {
             userId = crypto.randomUUID();
             await c.env.GENERAL_DB.prepare(
               `INSERT INTO users (id, email, name, etlab_username, profile_photo_url, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?)`
+               VALUES (?, ?, ?, ?, ?, ?, ?)`,
             )
               .bind(
                 userId,
@@ -256,7 +269,7 @@ export class EtlabVerify extends OpenAPIRoute {
                 username,
                 result.data.image || null,
                 Math.floor(Date.now() / 1000),
-                Math.floor(Date.now() / 1000)
+                Math.floor(Date.now() / 1000),
               )
               .run();
           }
@@ -270,20 +283,20 @@ export class EtlabVerify extends OpenAPIRoute {
             await c.env.CHALLENGES.put(
               `signup:${signupToken}`,
               JSON.stringify({ user_id: userId }),
-              { expirationTtl: 600 }
+              { expirationTtl: 600 },
             );
           } else {
             // Fallback to database if KV not available
             await c.env.GENERAL_DB.prepare(
               `INSERT OR REPLACE INTO challenges (challenge, user_id, type, created_at, expires_at)
-               VALUES (?, ?, ?, ?, ?)`
+               VALUES (?, ?, ?, ?, ?)`,
             )
               .bind(
                 signupToken,
                 userId,
                 "signup",
                 Math.floor(Date.now() / 1000),
-                expiresAt
+                expiresAt,
               )
               .run();
           }
@@ -307,19 +320,19 @@ export class EtlabVerify extends OpenAPIRoute {
         case STATUS_CODES.INVALID_CREDENTIALS:
           return c.json(
             { success: false, error: "Invalid EtLab credentials" },
-            401
+            401,
           );
 
         case STATUS_CODES.TIMEOUT_ERROR:
           return c.json(
             { success: false, error: "EtLab API request timeout" },
-            504
+            504,
           );
 
         case STATUS_CODES.NETWORK_ERROR:
           return c.json(
             { success: false, error: "Network error connecting to EtLab" },
-            503
+            503,
           );
 
         case STATUS_CODES.API_ERROR:
@@ -327,7 +340,7 @@ export class EtlabVerify extends OpenAPIRoute {
         default:
           return c.json(
             { success: false, error: "Error fetching data from EtLab" },
-            502
+            502,
           );
       }
     } catch (error) {

@@ -16,6 +16,12 @@ import { RefreshToken } from "./refreshToken";
 import { EventSignup } from "./eventSignup";
 import { PasswordResetRequest } from "./passwordResetRequest";
 import { PasswordResetVerify } from "./passwordResetVerify";
+import { LinkHackerRankPayment } from "./linkHackerRankPayment";
+import { GetNotifications } from "./getNotifications";
+import { CreateNotification } from "./createNotification";
+import { MarkNotificationRead } from "./markNotificationRead";
+import { MarkAllNotificationsRead } from "./markAllNotificationsRead";
+import { DeleteNotification } from "./deleteNotification";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -69,5 +75,13 @@ openapi.delete("/auth/passkeys/:credential_id", DeletePasskey);
 
 // Events
 openapi.post("/events/hackerrank_1", EventSignup);
+openapi.post("/events/hackerrank_1/payment", LinkHackerRankPayment);
+
+// Notifications
+openapi.get("/notifications", GetNotifications);
+openapi.post("/notifications", CreateNotification);
+openapi.put("/notifications/:id/read", MarkNotificationRead);
+openapi.put("/notifications/read-all", MarkAllNotificationsRead);
+openapi.delete("/notifications/:id", DeleteNotification);
 
 export default openapi;

@@ -130,6 +130,7 @@ export class PasskeyLoginVerify extends OpenAPIRoute {
       const accessToken = await generateJWT(
         challengeData.user_id,
         passkeyRecord.email as string,
+        passkeyRecord.phone as string | null,
         passkeyRecord.name as string,
         c.env.JWT_SECRET,
         15 * 60, // 15 minutes

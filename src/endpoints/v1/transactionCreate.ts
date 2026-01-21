@@ -27,7 +27,7 @@ export class TransactionCreate extends OpenAPIRoute {
 
     const rawTxn = data.body?.data;
 
-    const auth = c.req.header("authorization");
+    const auth = c.req.header("Authorization");
 
     if (auth != c.env.TOKEN) {
       c.status(404);

@@ -6,6 +6,7 @@
 interface JWTPayload {
   sub: string; // user_id
   email: string;
+  phone: string | null;
   name: string;
   iat: number; // issued at
   exp: number; // expires at
@@ -75,6 +76,7 @@ async function verifySignature(
 export async function generateJWT(
   userId: string,
   email: string,
+  phone: string | null,
   name: string,
   secret: string,
   expiresIn: number = 60 * 60, // 1 hour
@@ -89,6 +91,7 @@ export async function generateJWT(
   const payload: JWTPayload = {
     sub: userId,
     email: email,
+    phone: phone,
     name: name,
     iat: now,
     exp: now + expiresIn,

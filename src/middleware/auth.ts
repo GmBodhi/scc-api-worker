@@ -9,6 +9,7 @@ import { verifyJWT } from "../utils/jwt";
 export interface AuthUser {
   id: string;
   email: string;
+  phone?: string | null;
   name: string;
   etlab_username?: string | null;
   profile_photo_url?: string | null;

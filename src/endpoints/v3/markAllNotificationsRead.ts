@@ -1,30 +1,31 @@
 import { OpenAPIRoute } from "chanfana";
 import {
   type AppContext,
+  MarkNotificationReadResponse,
   ErrorResponse,
-  GetCurrentUserResponse,
 } from "../../types";
 import { requireAuth } from "../../middleware/auth";
 
 /**
- * GET /api/v3/auth/me
- * Get current authenticated user
+ * PUT /api/v3/notifications/read-all
+ * Mark all notifications as read for authenticated user
  */
-export class GetCurrentUser extends OpenAPIRoute {
+export class MarkAllNotificationsRead extends OpenAPIRoute {
   schema = {
-    summary: "Get current user",
+    summary: "Mark all notifications as read",
+    description: "Mark all notifications as read for the authenticated user",
     security: [{ bearerAuth: [] }],
     responses: {
       "200": {
-        description: "User details retrieved successfully",
+        description: "All notifications marked as read",
         content: {
           "application/json": {
-            schema: GetCurrentUserResponse,
+            schema: MarkNotificationReadResponse,
           },
         },
       },
       "401": {
-        description: "Unauthorized - invalid or missing session",
+        description: "Unauthorized",
         content: {
           "application/json": {
             schema: ErrorResponse,
@@ -44,9 +45,8 @@ export class GetCurrentUser extends OpenAPIRoute {
 
   async handle(c: AppContext) {
     try {
-      // Authenticate user (supports both JWT and session)
-      const AuthContext = await requireAuth(c);
-      const user = AuthContext?.user;
+      const authContext = await requireAuth(c);
+      const user = authContext?.user;
 
       if (!user) {
         return c.json(
@@ -55,20 +55,21 @@ export class GetCurrentUser extends OpenAPIRoute {
         );
       }
 
+      const now = Math.floor(Date.now() / 1000);
+
+      // Mark all unread notifications as read
+      await c.env.GENERAL_DB.prepare(
+        "UPDATE notifications SET read = 1, read_at = ? WHERE user_id = ? AND read = 0",
+      )
+        .bind(now, user.id)
+        .run();
+
       return c.json({
         success: true,
-        data: {
-          id: user.id,
-          email: user.email,
-          phone: user.phone || null,
-          name: user.name,
-          etlab_username: user.etlab_username || null,
-          profile_photo_url: user.profile_photo_url || null,
-          created_at: user.created_at || 0,
-        },
+        message: "All notifications marked as read",
       });
     } catch (error) {
-      console.error("Get current user error:", error);
+      console.error("Mark all notifications read error:", error);
       return c.json({ success: false, error: "Internal server error" }, 500);
     }
   }

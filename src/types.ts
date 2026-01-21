@@ -56,7 +56,10 @@ export const MentorshipProgramResponse = MentorshipProgramRegistration.extend({
 
 export const LinkTransactionRequest = z.object({
   refId: z.string().min(1, "Reference ID is required"),
-  studentId: z.string().min(1, "Student ID is required"),
+});
+
+export const LinkHackerRankPaymentRequest = z.object({
+  transaction_id: z.string().min(1, "Transaction reference ID is required"),
 });
 
 export const LinkTransactionResponse = z.object({
@@ -322,6 +325,7 @@ export const UpdateProfileResponse = z.object({
       id: z.string(),
       email: z.string(),
       name: z.string(),
+      phone: z.string().nullable(),
       etlab_username: z.string().nullable(),
       profile_photo_url: z.string().nullable(),
       created_at: z.number(),
@@ -402,4 +406,53 @@ export const PasswordResetVerifySchema = z.object({
 export const PasswordResetVerifyResponse = z.object({
   success: z.boolean(),
   message: z.string(),
+});
+
+// Notifications
+export const NotificationType = z.enum([
+  "info",
+  "success",
+  "warning",
+  "error",
+  "event",
+]);
+
+export const CreateNotificationRequest = z.object({
+  user_id: z.string().min(1, "User ID is required"),
+  title: z.string().min(1, "Title is required"),
+  message: z.string().min(1, "Message is required"),
+  type: NotificationType.optional().default("info"),
+  link: z.string().url().optional(),
+});
+
+export const Notification = z.object({
+  id: z.string(),
+  user_id: z.string(),
+  title: z.string(),
+  message: z.string(),
+  type: z.string(),
+  read: z.number(),
+  link: z.string().nullable(),
+  created_at: z.number(),
+  read_at: z.number().nullable(),
+});
+
+export const GetNotificationsResponse = z.object({
+  success: z.boolean(),
+  data: z.array(Notification).optional(),
+  unread_count: z.number().optional(),
+  error: z.string().optional(),
+});
+
+export const NotificationResponse = z.object({
+  success: z.boolean(),
+  data: Notification.optional(),
+  message: z.string().optional(),
+  error: z.string().optional(),
+});
+
+export const MarkNotificationReadResponse = z.object({
+  success: z.boolean(),
+  message: z.string().optional(),
+  error: z.string().optional(),
 });

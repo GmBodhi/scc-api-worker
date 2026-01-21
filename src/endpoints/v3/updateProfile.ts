@@ -82,9 +82,15 @@ export class UpdateProfile extends OpenAPIRoute {
       const updates: string[] = [];
       const bindings: any[] = [];
 
+      // Update name if provided
+      if (name !== undefined && name.trim()) {
+        updates.push("name = ?");
+        bindings.push(name.trim());
+      }
+
       // Update email if provided
       if (email !== undefined && email.trim()) {
-        // Check if email is already taken by another user
+        // Check if email already exists for another user
         const existingUser = await c.env.GENERAL_DB.prepare(
           "SELECT id FROM users WHERE email = ? AND id != ?",
         )
@@ -92,32 +98,17 @@ export class UpdateProfile extends OpenAPIRoute {
           .first();
 
         if (existingUser) {
-          return c.json(
-            { success: false, error: "Email is already in use" },
-            400,
-          );
+          return c.json({ success: false, error: "Email already in use" }, 400);
         }
 
         updates.push("email = ?");
         bindings.push(email.trim());
       }
 
-      // Update name if provided
-      if (name !== undefined && name.trim()) {
-        updates.push("name = ?");
-        bindings.push(name.trim());
-      }
-
       // Update phone if provided
-      if (phone !== undefined) {
-        if (phone.trim()) {
-          updates.push("phone = ?");
-          bindings.push(phone.trim());
-        } else {
-          // Allow clearing phone number
-          updates.push("phone = ?");
-          bindings.push(null);
-        }
+      if (phone !== undefined && phone.trim()) {
+        updates.push("phone = ?");
+        bindings.push(phone.trim());
       }
 
       // Handle profile photo update
@@ -147,6 +138,28 @@ export class UpdateProfile extends OpenAPIRoute {
                   ? `${user.id}-${Date.now()}-${profile_photo_filename}`
                   : `${user.id}-${Date.now()}.${extension}`;
                 const key = `profiles/${filename}`;
+
+                // Delete old profile photo from R2 if it exists
+                if (
+                  user.profile_photo_url &&
+                  user.profile_photo_url.includes(
+                    "profile-photos.sctcoding.club",
+                  )
+                ) {
+                  try {
+                    const oldKey = user.profile_photo_url.split(
+                      "profile-photos.sctcoding.club/",
+                    )[1];
+                    if (oldKey) {
+                      await c.env.PROFILE_PHOTOS.delete(oldKey);
+                    }
+                  } catch (deleteError) {
+                    console.error(
+                      "Failed to delete old profile photo:",
+                      deleteError,
+                    );
+                  }
+                }
 
                 // Upload to R2
                 await c.env.PROFILE_PHOTOS.put(key, imageBuffer, {
@@ -203,7 +216,7 @@ export class UpdateProfile extends OpenAPIRoute {
 
       // Fetch updated user data
       const updatedUser = await c.env.GENERAL_DB.prepare(
-        "SELECT id, email, name, etlab_username, profile_photo_url, created_at FROM users WHERE id = ?",
+        "SELECT id, email, name, phone, etlab_username, profile_photo_url, created_at FROM users WHERE id = ?",
       )
         .bind(user.id)
         .first();
@@ -221,6 +234,7 @@ export class UpdateProfile extends OpenAPIRoute {
           id: updatedUser.id as string,
           email: updatedUser.email as string,
           name: updatedUser.name as string,
+          phone: (updatedUser.phone as string) || null,
           etlab_username: (updatedUser.etlab_username as string) || null,
           profile_photo_url: (updatedUser.profile_photo_url as string) || null,
           created_at: updatedUser.created_at as number,

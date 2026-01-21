@@ -134,6 +134,7 @@ export async function handlePasskeyLoginVerify(
     const accessToken = await generateJWT(
       user.id as string,
       user.email as string,
+      user.phone as string | null,
       user.name as string,
       env.JWT_SECRET,
       15 * 60, // 15 minutes

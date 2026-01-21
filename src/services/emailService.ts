@@ -3,6 +3,8 @@ import {
   getPaymentConfirmationEmail,
   getMentorshipProgramConfirmationEmail,
   getPasswordResetEmail,
+  getWelcomeEmail,
+  getHackerRankPaymentConfirmationEmail,
 } from "../utils/templateLoader";
 
 interface EmailOptions {
@@ -104,6 +106,26 @@ export class EmailService {
       to: email,
       toName: name,
       subject: "🎉 Welcome to SCT Coding Club!",
+      html,
+    });
+  }
+
+  async sendHackerRankPaymentConfirmationEmail(
+    name: string,
+    email: string,
+    registrationId: string,
+    transactionRef: string,
+  ): Promise<boolean> {
+    const html = getHackerRankPaymentConfirmationEmail({
+      name,
+      registrationId,
+      transactionRef,
+    });
+
+    return this.sendEmail({
+      to: email,
+      toName: name,
+      subject: "🎉 Payment Confirmed - HackerRank Event Registration",
       html,
     });
   }
