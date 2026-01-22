@@ -4,12 +4,12 @@ import {
   ErrorResponse,
   PasskeyLoginVerifyRequest,
   PasskeyLoginVerifyResponse,
-} from "../../types";
+} from "../../../types";
 import {
   generateJWT,
   generateRefreshToken,
   hashRefreshToken,
-} from "../../utils/jwt";
+} from "../../../utils/jwt";
 
 /**
  * POST /api/v3/auth/passkey/login/verify

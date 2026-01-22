@@ -1,4 +1,4 @@
-import { Env } from "../../types";
+import { Env } from "../../../types";
 
 /**
  * POST /api/v3/auth/passkey/register/start

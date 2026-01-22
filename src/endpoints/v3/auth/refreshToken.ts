@@ -1,11 +1,11 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext, ErrorResponse } from "../../types";
+import { type AppContext, ErrorResponse } from "../../../types";
 import { z } from "zod";
 import {
   generateJWT,
   verifyRefreshToken,
   hashRefreshToken,
-} from "../../utils/jwt";
+} from "../../../utils/jwt";
 
 const RefreshRequest = z.object({
   refresh_token: z.string().min(1),

@@ -4,9 +4,9 @@ import {
   LinkHackerRankPaymentRequest,
   LinkTransactionResponse,
   ErrorResponse,
-} from "../../types";
-import { EmailService } from "../../services/emailService";
-import { requireAuth } from "../../middleware/auth";
+} from "../../../types";
+import { EmailService } from "../../../services/emailService";
+import { requireAuth } from "../../../middleware/auth";
 
 /**
  * POST /api/v3/events/hackerrank_1/payment

@@ -4,13 +4,13 @@ import {
   ErrorResponse,
   SignupRequest,
   SignupResponse,
-} from "../../types";
+} from "../../../types";
 import {
   generateJWT,
   generateRefreshToken,
   hashRefreshToken,
-} from "../../utils/jwt";
-import { EmailService } from "../../services/emailService";
+} from "../../../utils/jwt";
+import { EmailService } from "../../../services/emailService";
 
 /**
  * POST /api/v3/auth/signup

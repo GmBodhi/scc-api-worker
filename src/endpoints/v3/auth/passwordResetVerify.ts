@@ -4,7 +4,7 @@ import {
   PasswordResetVerifySchema,
   PasswordResetVerifyResponse,
   ErrorResponse,
-} from "../../types";
+} from "../../../types";
 
 /**
  * POST /api/v3/auth/password/reset/verify

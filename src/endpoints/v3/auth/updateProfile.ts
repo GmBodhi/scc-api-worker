@@ -4,8 +4,8 @@ import {
   ErrorResponse,
   UpdateProfileRequest,
   UpdateProfileResponse,
-} from "../../types";
-import { requireAuth } from "../../middleware/auth";
+} from "../../../types";
+import { requireAuth } from "../../../middleware/auth";
 
 /**
  * PUT /api/v3/auth/profile

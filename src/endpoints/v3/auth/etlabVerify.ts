@@ -4,8 +4,8 @@ import {
   ErrorResponse,
   EtlabVerifyRequest,
   EtlabVerifyResponse,
-} from "../../types";
-import { requireAuth } from "../../middleware/auth";
+} from "../../../types";
+import { requireAuth } from "../../../middleware/auth";
 
 interface EtLabProfileData {
   admno: string | null;

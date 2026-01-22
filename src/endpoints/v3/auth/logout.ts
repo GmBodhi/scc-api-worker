@@ -1,6 +1,6 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext, ErrorResponse, LogoutResponse } from "../../types";
-import { requireAuth } from "../../middleware/auth";
+import { type AppContext, ErrorResponse, LogoutResponse } from "../../../types";
+import { requireAuth } from "../../../middleware/auth";
 
 /**
  * POST /api/v3/auth/logout

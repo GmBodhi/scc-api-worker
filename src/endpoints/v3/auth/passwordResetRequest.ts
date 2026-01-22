@@ -4,8 +4,8 @@ import {
   PasswordResetRequestSchema,
   PasswordResetRequestResponse,
   ErrorResponse,
-} from "../../types";
-import { EmailService } from "../../services/emailService";
+} from "../../../types";
+import { EmailService } from "../../../services/emailService";
 
 /**
  * POST /api/v3/auth/password/reset

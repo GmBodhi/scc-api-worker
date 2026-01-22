@@ -4,7 +4,7 @@ import {
   CreateNotificationRequest,
   NotificationResponse,
   ErrorResponse,
-} from "../../types";
+} from "../../../types";
 
 /**
  * POST /api/v3/notifications

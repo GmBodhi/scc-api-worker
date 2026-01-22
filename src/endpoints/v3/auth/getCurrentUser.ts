@@ -3,8 +3,8 @@ import {
   type AppContext,
   ErrorResponse,
   GetCurrentUserResponse,
-} from "../../types";
-import { requireAuth } from "../../middleware/auth";
+} from "../../../types";
+import { requireAuth } from "../../../middleware/auth";
 
 /**
  * GET /api/v3/auth/me

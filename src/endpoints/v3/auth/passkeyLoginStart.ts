@@ -4,7 +4,7 @@ import {
   ErrorResponse,
   PasskeyLoginStartRequest,
   PasskeyLoginStartResponse,
-} from "../../types";
+} from "../../../types";
 
 /**
  * POST /api/v3/auth/passkey/login/start

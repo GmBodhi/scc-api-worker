@@ -3,8 +3,8 @@ import {
   type AppContext,
   ErrorResponse,
   DeletePasskeyResponse,
-} from "../../types";
-import { requireAuth } from "../../middleware/auth";
+} from "../../../types";
+import { requireAuth } from "../../../middleware/auth";
 
 /**
  * DELETE /api/v3/auth/passkeys/:credential_id

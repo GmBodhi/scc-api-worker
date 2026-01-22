@@ -4,12 +4,12 @@ import {
   ErrorResponse,
   LoginRequest,
   LoginResponse,
-} from "../../types";
+} from "../../../types";
 import {
   generateJWT,
   generateRefreshToken,
   hashRefreshToken,
-} from "../../utils/jwt";
+} from "../../../utils/jwt";
 
 /**
  * POST /api/v3/auth/login

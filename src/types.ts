@@ -462,3 +462,109 @@ export const MarkNotificationReadResponse = z.object({
   message: z.string().optional(),
   error: z.string().optional(),
 });
+
+// Ideas (Host Your Own Events) schemas
+export const CreateIdeaRequest = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+});
+
+export const IdeaAuthor = z.object({
+  id: z.string(),
+  name: z.string(),
+  profile_photo_url: z.string().nullable(),
+  is_verified: z.boolean(),
+});
+
+export const Idea = z.object({
+  id: z.string(),
+  user_id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  created_at: z.number(),
+  updated_at: z.number(),
+  author: IdeaAuthor,
+  vote_count: z.number(),
+  comment_count: z.number(),
+  has_voted: z.boolean().optional(), // Only present when user is authenticated
+});
+
+export const CreateIdeaResponse = z.object({
+  success: z.boolean(),
+  data: Idea.optional(),
+  message: z.string().optional(),
+  error: z.string().optional(),
+});
+
+export const GetIdeasResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      ideas: z.array(Idea),
+      total: z.number(),
+      page: z.number(),
+      limit: z.number(),
+      total_pages: z.number(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const GetIdeaResponse = z.object({
+  success: z.boolean(),
+  data: Idea.optional(),
+  error: z.string().optional(),
+});
+
+export const VoteIdeaResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      voted: z.boolean(),
+      vote_count: z.number(),
+    })
+    .optional(),
+  message: z.string().optional(),
+  error: z.string().optional(),
+});
+
+export const CreateCommentRequest = z.object({
+  comment: z.string().min(1, "Comment cannot be empty"),
+});
+
+export const IdeaComment = z.object({
+  id: z.string(),
+  idea_id: z.string(),
+  user_id: z.string(),
+  comment: z.string(),
+  created_at: z.number(),
+  updated_at: z.number(),
+  author: IdeaAuthor,
+});
+
+export const CreateCommentResponse = z.object({
+  success: z.boolean(),
+  data: IdeaComment.optional(),
+  message: z.string().optional(),
+  error: z.string().optional(),
+});
+
+export const GetCommentsResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      comments: z.array(IdeaComment),
+      total: z.number(),
+      page: z.number(),
+      limit: z.number(),
+      total_pages: z.number(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const DeleteCommentResponse = z.object({
+  success: z.boolean(),
+  message: z.string().optional(),
+  error: z.string().optional(),
+});

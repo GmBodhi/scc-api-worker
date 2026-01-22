@@ -3,8 +3,8 @@ import {
   type AppContext,
   GetNotificationsResponse,
   ErrorResponse,
-} from "../../types";
-import { requireAuth } from "../../middleware/auth";
+} from "../../../types";
+import { requireAuth } from "../../../middleware/auth";
 
 /**
  * GET /api/v3/notifications

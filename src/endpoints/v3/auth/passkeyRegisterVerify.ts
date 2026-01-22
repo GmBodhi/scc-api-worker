@@ -4,8 +4,8 @@ import {
   ErrorResponse,
   PasskeyRegisterVerifyRequest,
   PasskeyRegisterVerifyResponse,
-} from "../../types";
-import { requireAuth } from "../../middleware/auth";
+} from "../../../types";
+import { requireAuth } from "../../../middleware/auth";
 
 /**
  * POST /api/v3/auth/passkey/register/verify

@@ -1,27 +1,38 @@
 import { fromHono } from "chanfana";
 import { Hono } from "hono";
-import { Signup } from "./signup";
-import { EtlabVerify } from "./etlabVerify";
-import { Login } from "./login";
-import { PasskeyRegisterStart } from "./passkeyRegisterStart";
-import { PasskeyRegisterVerify } from "./passkeyRegisterVerify";
-import { PasskeyLoginStart } from "./passkeyLoginStart";
-import { PasskeyLoginVerify } from "./passkeyLoginVerify";
-import { GetCurrentUser } from "./getCurrentUser";
-import { UpdateProfile } from "./updateProfile";
-import { Logout } from "./logout";
-import { GetPasskeys } from "./getPasskeys";
-import { DeletePasskey } from "./deletePasskey";
-import { RefreshToken } from "./refreshToken";
-import { EventSignup } from "./eventSignup";
-import { PasswordResetRequest } from "./passwordResetRequest";
-import { PasswordResetVerify } from "./passwordResetVerify";
-import { LinkHackerRankPayment } from "./linkHackerRankPayment";
-import { GetNotifications } from "./getNotifications";
-import { CreateNotification } from "./createNotification";
-import { MarkNotificationRead } from "./markNotificationRead";
-import { MarkAllNotificationsRead } from "./markAllNotificationsRead";
-import { DeleteNotification } from "./deleteNotification";
+// Auth
+import { Signup } from "./auth/signup";
+import { EtlabVerify } from "./auth/etlabVerify";
+import { Login } from "./auth/login";
+import { Logout } from "./auth/logout";
+import { GetCurrentUser } from "./auth/getCurrentUser";
+import { UpdateProfile } from "./auth/updateProfile";
+import { RefreshToken } from "./auth/refreshToken";
+import { PasswordResetRequest } from "./auth/passwordResetRequest";
+import { PasswordResetVerify } from "./auth/passwordResetVerify";
+import { PasskeyRegisterStart } from "./auth/passkeyRegisterStart";
+import { PasskeyRegisterVerify } from "./auth/passkeyRegisterVerify";
+import { PasskeyLoginStart } from "./auth/passkeyLoginStart";
+import { PasskeyLoginVerify } from "./auth/passkeyLoginVerify";
+import { GetPasskeys } from "./auth/getPasskeys";
+import { DeletePasskey } from "./auth/deletePasskey";
+// Events
+import { EventSignup } from "./events/eventSignup";
+import { LinkHackerRankPayment } from "./events/linkHackerRankPayment";
+// Notifications
+import { GetNotifications } from "./notifications/getNotifications";
+import { CreateNotification } from "./notifications/createNotification";
+import { MarkNotificationRead } from "./notifications/markNotificationRead";
+import { MarkAllNotificationsRead } from "./notifications/markAllNotificationsRead";
+import { DeleteNotification } from "./notifications/deleteNotification";
+// Ideas
+import { CreateIdea } from "./ideas/createIdea";
+import { GetIdeas } from "./ideas/getIdeas";
+import { GetIdea } from "./ideas/getIdea";
+import { VoteIdea } from "./ideas/voteIdea";
+import { CreateIdeaComment } from "./ideas/createIdeaComment";
+import { GetIdeaComments } from "./ideas/getIdeaComments";
+import { DeleteIdeaComment } from "./ideas/deleteIdeaComment";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -83,5 +94,14 @@ openapi.post("/notifications", CreateNotification);
 openapi.put("/notifications/:id/read", MarkNotificationRead);
 openapi.put("/notifications/read-all", MarkAllNotificationsRead);
 openapi.delete("/notifications/:id", DeleteNotification);
+
+// Ideas (Host Your Own Events)
+openapi.post("/ideas", CreateIdea);
+openapi.get("/ideas", GetIdeas);
+openapi.get("/ideas/:id", GetIdea);
+openapi.post("/ideas/:id/vote", VoteIdea);
+openapi.post("/ideas/:id/comments", CreateIdeaComment);
+openapi.get("/ideas/:id/comments", GetIdeaComments);
+openapi.delete("/ideas/:id/comments/:comment_id", DeleteIdeaComment);
 
 export default openapi;
