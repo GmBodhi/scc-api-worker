@@ -129,6 +129,7 @@ export class Login extends OpenAPIRoute {
             email: user.email,
             phone: user.phone,
             name: user.name,
+            google_id: user.google_id,
             profile_photo_url: user.profile_photo_url,
             is_verified: user.is_verified,
           },

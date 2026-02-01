@@ -1,6 +1,7 @@
 import { OpenAPIRoute } from "chanfana";
 import { type AppContext, ErrorResponse, GetIdeaResponse } from "../../../types";
 import { optionalAuth } from "../../../middleware/auth";
+import z from "zod";
 
 /**
  * GET /api/v3/ideas/:id
@@ -11,13 +12,7 @@ export class GetIdea extends OpenAPIRoute {
   schema = {
     summary: "Get a single event idea by ID",
     request: {
-      params: {
-        id: {
-          type: "string",
-          description: "Idea ID",
-          required: true,
-        },
-      },
+      params: z.object({ id: z.string().min(1, "Idea ID is required") }),
     },
     responses: {
       "200": {
@@ -53,7 +48,7 @@ export class GetIdea extends OpenAPIRoute {
       const user = await optionalAuth(c);
 
       const data = await this.getValidatedData<typeof this.schema>();
-      const ideaId = data.params.id;
+      const ideaId = c.req.param("id");
 
       // Get idea with vote and comment counts
       const idea = await c.env.GENERAL_DB.prepare(

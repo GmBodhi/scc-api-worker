@@ -73,6 +73,7 @@ export class GetCurrentUser extends OpenAPIRoute {
           email: dbUser.email,
           phone: dbUser.phone || null,
           name: dbUser.name,
+          google_id: dbUser.google_id || null,
           etlab_username: dbUser.etlab_username || null,
           profile_photo_url: dbUser.profile_photo_url || null,
           created_at: dbUser.created_at || 0,

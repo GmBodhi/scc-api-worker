@@ -1,5 +1,7 @@
 -- Add Google OAuth support to users table
-ALTER TABLE users ADD COLUMN google_id TEXT UNIQUE;
+ALTER TABLE users ADD COLUMN google_id TEXT;
 
--- Create index for faster lookups
-CREATE INDEX idx_users_google_id ON users (google_id);
+-- Create unique index for faster lookups and uniqueness constraint
+CREATE UNIQUE INDEX idx_users_google_id ON users (google_id)
+WHERE
+    google_id IS NOT NULL;

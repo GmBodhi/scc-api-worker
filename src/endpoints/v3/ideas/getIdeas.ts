@@ -1,6 +1,7 @@
 import { OpenAPIRoute } from "chanfana";
 import { type AppContext, ErrorResponse, GetIdeasResponse } from "../../../types";
 import { optionalAuth } from "../../../middleware/auth";
+import z from "zod";
 
 /**
  * GET /api/v3/ideas
@@ -13,18 +14,16 @@ export class GetIdeas extends OpenAPIRoute {
     description:
       "Returns paginated list of ideas sorted by vote count (most voted first)",
     request: {
-      query: {
-        page: {
-          type: "number",
-          description: "Page number (starts at 1)",
-          default: 1,
-        },
-        limit: {
-          type: "number",
-          description: "Number of items per page (max 50)",
-          default: 20,
-        },
-      },
+      query: z.object({
+        page: z
+          .string()
+          .optional()
+          .transform((val) => (val ? Number(val) : 1)),
+        limit: z
+          .string()
+          .optional()
+          .transform((val) => (val ? Number(val) : 20)),
+      }),
     },
     responses: {
       "200": {

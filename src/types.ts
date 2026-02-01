@@ -568,3 +568,39 @@ export const DeleteCommentResponse = z.object({
   message: z.string().optional(),
   error: z.string().optional(),
 });
+
+// Google OAuth schemas
+export const GoogleOAuthInitiateResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      auth_url: z.string(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const GoogleOAuthCallbackRequest = z.object({
+  code: z.string().min(1, "Authorization code is required"),
+  state: z.string().min(1, "State is required"),
+});
+
+export const GoogleOAuthCallbackResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      access_token: z.string(),
+      refresh_token: z.string(),
+      expires_in: z.number(),
+      user: z.object({
+        id: z.string(),
+        email: z.string(),
+        name: z.string(),
+        profile_photo_url: z.string().nullable(),
+        is_verified: z.boolean(),
+      }),
+      is_new_user: z.boolean(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});

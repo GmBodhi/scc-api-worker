@@ -6,6 +6,7 @@ import {
   CreateCommentResponse,
 } from "../../../types";
 import { requireAuth } from "../../../middleware/auth";
+import z from "zod";
 
 /**
  * POST /api/v3/ideas/:id/comments
@@ -16,13 +17,7 @@ export class CreateIdeaComment extends OpenAPIRoute {
     summary: "Add a comment to an event idea",
     security: [{ bearerAuth: [] }],
     request: {
-      params: {
-        id: {
-          type: "string",
-          description: "Idea ID",
-          required: true,
-        },
-      },
+      params: z.object({ id: z.string().min(1, "Idea ID is required") }),
       body: {
         content: {
           "application/json": {

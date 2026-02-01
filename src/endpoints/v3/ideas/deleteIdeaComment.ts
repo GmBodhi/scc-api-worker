@@ -5,6 +5,7 @@ import {
   DeleteCommentResponse,
 } from "../../../types";
 import { requireAuth } from "../../../middleware/auth";
+import z from "zod";
 
 /**
  * DELETE /api/v3/ideas/:id/comments/:comment_id
@@ -16,62 +17,54 @@ export class DeleteIdeaComment extends OpenAPIRoute {
     description: "Users can only delete their own comments",
     security: [{ bearerAuth: [] }],
     request: {
-      params: {
-        id: {
-          type: "string",
-          description: "Idea ID",
-          required: true,
-        },
-        comment_id: {
-          type: "string",
-          description: "Comment ID",
-          required: true,
-        },
-      },
+      params: z.object({
+      id: z.string().describe("Idea ID"),
+      comment_id: z.string().describe("Comment ID"),
+      }),
     },
     responses: {
       "200": {
-        description: "Comment deleted successfully",
-        content: {
-          "application/json": {
-            schema: DeleteCommentResponse,
-          },
+      description: "Comment deleted successfully",
+      content: {
+        "application/json": {
+        schema: DeleteCommentResponse,
         },
+      },
       },
       "401": {
-        description: "Unauthorized - authentication required",
-        content: {
-          "application/json": {
-            schema: ErrorResponse,
-          },
+      description: "Unauthorized - authentication required",
+      content: {
+        "application/json": {
+        schema: ErrorResponse,
         },
+      },
       },
       "403": {
-        description: "Forbidden - can only delete own comments",
-        content: {
-          "application/json": {
-            schema: ErrorResponse,
-          },
+      description: "Forbidden - can only delete own comments",
+      content: {
+        "application/json": {
+        schema: ErrorResponse,
         },
+      },
       },
       "404": {
-        description: "Comment not found",
-        content: {
-          "application/json": {
-            schema: ErrorResponse,
-          },
+      description: "Comment not found",
+      content: {
+        "application/json": {
+        schema: ErrorResponse,
         },
+      },
       },
       "500": {
-        description: "Internal server error",
-        content: {
-          "application/json": {
-            schema: ErrorResponse,
-          },
+      description: "Internal server error",
+      content: {
+        "application/json": {
+        schema: ErrorResponse,
         },
       },
+      },
     },
-  };
+    };
 
   async handle(c: AppContext) {
     try {

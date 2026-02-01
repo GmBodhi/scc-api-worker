@@ -1,6 +1,11 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext, ErrorResponse, VoteIdeaResponse } from "../../../types";
+import {
+  type AppContext,
+  ErrorResponse,
+  VoteIdeaResponse,
+} from "../../../types";
 import { requireAuth } from "../../../middleware/auth";
+import z from "zod";
 
 /**
  * POST /api/v3/ideas/:id/vote
@@ -14,13 +19,7 @@ export class VoteIdea extends OpenAPIRoute {
       "Toggle vote - adds vote if not voted, removes if already voted. Only EtLab verified users can vote.",
     security: [{ bearerAuth: [] }],
     request: {
-      params: {
-        id: {
-          type: "string",
-          description: "Idea ID",
-          required: true,
-        },
-      },
+      params: z.object({ id: z.string().min(1, "Idea ID is required") }),
     },
     responses: {
       "200": {
@@ -93,18 +92,7 @@ export class VoteIdea extends OpenAPIRoute {
       const data = await this.getValidatedData<typeof this.schema>();
       const ideaId = data.params.id;
 
-      // Check if idea exists
-      const idea = await c.env.GENERAL_DB.prepare(
-        "SELECT id FROM ideas WHERE id = ?",
-      )
-        .bind(ideaId)
-        .first();
-
-      if (!idea) {
-        return c.json({ success: false, error: "Idea not found" }, 404);
-      }
-
-      // Check if user has already voted
+      // Check if user has already voted (idea existence will be validated by foreign key)
       const existingVote = await c.env.GENERAL_DB.prepare(
         "SELECT id FROM idea_votes WHERE idea_id = ? AND user_id = ?",
       )

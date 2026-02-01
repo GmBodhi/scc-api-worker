@@ -4,6 +4,7 @@ import {
   ErrorResponse,
   GetCommentsResponse,
 } from "../../../types";
+import z from "zod";
 
 /**
  * GET /api/v3/ideas/:id/comments
@@ -16,25 +17,22 @@ export class GetIdeaComments extends OpenAPIRoute {
     description:
       "Returns paginated list of comments sorted by creation date (newest first)",
     request: {
-      params: {
-        id: {
-          type: "string",
-          description: "Idea ID",
-          required: true,
-        },
-      },
-      query: {
-        page: {
-          type: "number",
-          description: "Page number (starts at 1)",
-          default: 1,
-        },
-        limit: {
-          type: "number",
-          description: "Number of items per page (max 50)",
-          default: 20,
-        },
-      },
+      params: z.object({ id: z.string().min(1, "Idea ID is required") }),
+      query: z.object({
+        page: z.coerce
+          .number()
+          .int()
+          .positive()
+          .default(1)
+          .describe("Page number (starts at 1)"),
+        limit: z.coerce
+          .number()
+          .int()
+          .positive()
+          .max(50)
+          .default(20)
+          .describe("Number of items per page (max 50)"),
+      }),
     },
     responses: {
       "200": {
@@ -67,7 +65,7 @@ export class GetIdeaComments extends OpenAPIRoute {
   async handle(c: AppContext) {
     try {
       const data = await this.getValidatedData<typeof this.schema>();
-      const ideaId = data.params.id;
+      const ideaId = c.req.param("id");
 
       // Check if idea exists
       const idea = await c.env.GENERAL_DB.prepare(

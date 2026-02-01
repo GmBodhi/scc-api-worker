@@ -16,6 +16,9 @@ import { PasskeyLoginStart } from "./auth/passkeyLoginStart";
 import { PasskeyLoginVerify } from "./auth/passkeyLoginVerify";
 import { GetPasskeys } from "./auth/getPasskeys";
 import { DeletePasskey } from "./auth/deletePasskey";
+import { GoogleOAuthInitiate } from "./auth/googleOauthInitiate";
+import { GoogleOAuthCallback } from "./auth/googleOauthCallback";
+import { GoogleOAuthDisconnect } from "./auth/googleOauthDisconnect";
 // Events
 import { EventSignup } from "./events/eventSignup";
 import { LinkHackerRankPayment } from "./events/linkHackerRankPayment";
@@ -64,6 +67,11 @@ openapi.post("/auth/signup", Signup);
 openapi.post("/auth/etlab/verify", EtlabVerify);
 openapi.post("/auth/login", Login);
 openapi.post("/auth/refresh", RefreshToken);
+
+// Google OAuth
+openapi.get("/auth/google", GoogleOAuthInitiate);
+openapi.get("/auth/google/callback", GoogleOAuthCallback);
+openapi.delete("/auth/google", GoogleOAuthDisconnect);
 
 // Password Reset
 openapi.post("/auth/password/reset", PasswordResetRequest);

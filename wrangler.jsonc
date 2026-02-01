@@ -63,6 +63,7 @@
 		"RP_NAME": "Coding Club",
 		"RP_ID": "sccbeta.netlify.app",
 		"ORIGIN": "https://sccbeta.netlify.app",
+		"GOOGLE_REDIRECT_URI": "http://localhost:8080/auth/google/callback",
 	},
 	"triggers": {
 		"crons": [

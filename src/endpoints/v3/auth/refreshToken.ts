@@ -148,6 +148,8 @@ export class RefreshToken extends OpenAPIRoute {
             id: user.id as string,
             email: user.email as string,
             name: user.name as string,
+            phone: user.phone as string | null,
+            google_id: user.google_id as string | null,
             profile_photo_url: user.profile_photo_url as string | null,
           },
         },
