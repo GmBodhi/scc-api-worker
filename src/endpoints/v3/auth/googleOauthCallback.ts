@@ -261,8 +261,12 @@ export class GoogleOAuthCallback extends OpenAPIRoute {
           user: {
             id: user.id as string,
             email: user.email as string,
+            phone: (user.phone as string) || null,
             name: user.name as string,
+            google_id: (user.google_id as string) || null,
+            etlab_username: (user.etlab_username as string) || null,
             profile_photo_url: (user.profile_photo_url as string) || null,
+            created_at: user.created_at || 0,
             is_verified: Boolean(user.is_verified),
           },
           is_new_user: isNewUser,

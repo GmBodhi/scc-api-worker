@@ -34,6 +34,9 @@ export class GoogleOAuthInitiate extends OpenAPIRoute {
         );
       }
 
+      // Check if client wants account selection (for signup flow)
+      const { signup } = c.req.query();
+
       // Generate random state for CSRF protection
       const state = crypto.randomUUID();
 
@@ -46,9 +49,13 @@ export class GoogleOAuthInitiate extends OpenAPIRoute {
         response_type: "code",
         scope: "openid email profile",
         state,
-        access_type: "offline",
-        prompt: "consent",
+        access_type: "online",
       });
+
+      // Add account selection prompt for signup flow
+      if (signup === "true") {
+        params.set("prompt", "select_account");
+      }
 
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 

@@ -61,9 +61,9 @@
    */
 	"vars": {
 		"RP_NAME": "Coding Club",
-		"RP_ID": "sccbeta.netlify.app",
-		"ORIGIN": "https://sccbeta.netlify.app",
-		"GOOGLE_REDIRECT_URI": "http://localhost:8080/auth/google/callback",
+		"RP_ID": "sctcoding.club",
+		"ORIGIN": "https://sctcoding.club",
+		"GOOGLE_REDIRECT_URI": "https://sctcoding.club/auth/google/callback",
 	},
 	"triggers": {
 		"crons": [
