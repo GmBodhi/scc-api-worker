@@ -32,9 +32,11 @@ import { DeleteNotification } from "./notifications/deleteNotification";
 import { CreateIdea } from "./ideas/createIdea";
 import { GetIdeas } from "./ideas/getIdeas";
 import { GetIdea } from "./ideas/getIdea";
+import { UpdateIdea } from "./ideas/updateIdea";
 import { VoteIdea } from "./ideas/voteIdea";
 import { CreateIdeaComment } from "./ideas/createIdeaComment";
 import { GetIdeaComments } from "./ideas/getIdeaComments";
+import { UpdateIdeaComment } from "./ideas/updateIdeaComment";
 import { DeleteIdeaComment } from "./ideas/deleteIdeaComment";
 
 const app = new Hono<{ Bindings: Env }>();
@@ -107,9 +109,11 @@ openapi.delete("/notifications/:id", DeleteNotification);
 openapi.post("/ideas", CreateIdea);
 openapi.get("/ideas", GetIdeas);
 openapi.get("/ideas/:id", GetIdea);
+openapi.patch("/ideas/:id", UpdateIdea);
 openapi.post("/ideas/:id/vote", VoteIdea);
 openapi.post("/ideas/:id/comments", CreateIdeaComment);
 openapi.get("/ideas/:id/comments", GetIdeaComments);
+openapi.patch("/ideas/:id/comments/:comment_id", UpdateIdeaComment);
 openapi.delete("/ideas/:id/comments/:comment_id", DeleteIdeaComment);
 
 export default openapi;

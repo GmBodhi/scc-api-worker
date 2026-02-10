@@ -92,34 +92,41 @@ export class VoteIdea extends OpenAPIRoute {
       const data = await this.getValidatedData<typeof this.schema>();
       const ideaId = data.params.id;
 
-      // Check if user has already voted (idea existence will be validated by foreign key)
-      const existingVote = await c.env.GENERAL_DB.prepare(
-        "SELECT id FROM idea_votes WHERE idea_id = ? AND user_id = ?",
+      // Check if idea exists
+      const idea = await c.env.GENERAL_DB.prepare(
+        "SELECT id FROM ideas WHERE id = ?",
       )
-        .bind(ideaId, user.id)
+        .bind(ideaId)
         .first();
+
+      if (!idea) {
+        return c.json({ success: false, error: "Idea not found" }, 404);
+      }
 
       let voted = false;
 
-      if (existingVote) {
-        // Remove vote
-        await c.env.GENERAL_DB.prepare("DELETE FROM idea_votes WHERE id = ?")
-          .bind(existingVote.id)
+      // Use INSERT OR IGNORE to avoid race condition (UNIQUE constraint on idea_id, user_id)
+      const insertResult = await c.env.GENERAL_DB.prepare(
+        `INSERT OR IGNORE INTO idea_votes (id, idea_id, user_id, created_at)
+         VALUES (?, ?, ?, ?)`,
+      )
+        .bind(
+          crypto.randomUUID(),
+          ideaId,
+          user.id,
+          Math.floor(Date.now() / 1000),
+        )
+        .run();
+
+      if (insertResult.meta.changes === 0) {
+        // Already voted, remove it
+        await c.env.GENERAL_DB.prepare(
+          "DELETE FROM idea_votes WHERE idea_id = ? AND user_id = ?",
+        )
+          .bind(ideaId, user.id)
           .run();
         voted = false;
       } else {
-        // Add vote
-        await c.env.GENERAL_DB.prepare(
-          `INSERT INTO idea_votes (id, idea_id, user_id, created_at)
-           VALUES (?, ?, ?, ?)`,
-        )
-          .bind(
-            crypto.randomUUID(),
-            ideaId,
-            user.id,
-            Math.floor(Date.now() / 1000),
-          )
-          .run();
         voted = true;
       }
 

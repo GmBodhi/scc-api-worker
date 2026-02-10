@@ -78,12 +78,9 @@ export class GetIdeaComments extends OpenAPIRoute {
         return c.json({ success: false, error: "Idea not found" }, 404);
       }
 
-      // Get query parameters
-      const page = Math.max(1, Number(c.req.query("page")) || 1);
-      const limit = Math.min(
-        50,
-        Math.max(1, Number(c.req.query("limit")) || 20),
-      );
+      // Use validated data for pagination
+      const page = Math.max(1, data.query.page);
+      const limit = Math.min(50, Math.max(1, data.query.limit));
       const offset = (page - 1) * limit;
 
       // Get total count
