@@ -4,6 +4,7 @@ import { mentorshipProgramConfirmationTemplate } from "../templates/mentorship-p
 import { getPasswordResetEmail as passwordResetTemplate } from "../templates/password-reset";
 import { getWelcomeEmail as welcomeEmailTemplate } from "../templates/welcome-email";
 import { getHackerRankPaymentConfirmationEmail as hackerRankPaymentTemplate } from "../templates/hackerrank-payment-confirmation";
+import { getMcpWorkshopConfirmationEmail as mcpWorkshopTemplate } from "../templates/mcp-workshop-confirmation";
 export function getFollowUpEmail(variables: {
   studentName: string;
   studentId: string;
@@ -49,4 +50,11 @@ export function getHackerRankPaymentConfirmationEmail(variables: {
   transactionRef: string;
 }): string {
   return hackerRankPaymentTemplate(variables);
+}
+
+export function getMcpWorkshopConfirmationEmail(variables: {
+  name: string;
+  registrationId: string;
+}): string {
+  return mcpWorkshopTemplate(variables);
 }

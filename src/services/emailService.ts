@@ -5,6 +5,7 @@ import {
   getPasswordResetEmail,
   getWelcomeEmail,
   getHackerRankPaymentConfirmationEmail,
+  getMcpWorkshopConfirmationEmail,
 } from "../utils/templateLoader";
 
 interface EmailOptions {
@@ -130,6 +131,21 @@ export class EmailService {
       to: email,
       toName: name,
       subject: "🎉 Payment Confirmed - HackerRank Event Registration",
+      html,
+    });
+  }
+
+  async sendMcpWorkshopConfirmationEmail(
+    name: string,
+    email: string,
+    registrationId: string,
+  ): Promise<boolean> {
+    const html = getMcpWorkshopConfirmationEmail({ name, registrationId });
+
+    return this.sendEmail({
+      to: email,
+      toName: name,
+      subject: "🎉 Registration Confirmed — MCP Workshop, March 14",
       html,
     });
   }

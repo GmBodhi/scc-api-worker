@@ -376,6 +376,36 @@ export const EventSignupRequest = z.object({
   batch: z.string().min(1, "Batch is required"),
 });
 
+export const JdkInstalledStatus = z.enum([
+  "already_installed",
+  "will_follow_tutorial",
+]);
+
+export const McpWorkshopSignupRequest = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  whatsapp: z
+    .string()
+    .min(10, "WhatsApp number must be at least 10 digits")
+    .regex(/^\d+$/, "WhatsApp number must contain digits only"),
+  jdkInstalled: JdkInstalledStatus,
+  springTutorial: z.literal(true, {
+    errorMap: () => ({
+      message: "You must confirm watching the Spring Boot setup tutorial",
+    }),
+  }),
+});
+
+export const McpWorkshopSignupResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      registration_id: z.string(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
 export const EventSignupResponse = z.object({
   success: z.boolean(),
   data: z

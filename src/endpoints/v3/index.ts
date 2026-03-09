@@ -22,6 +22,7 @@ import { GoogleOAuthDisconnect } from "./auth/googleOauthDisconnect";
 // Events
 import { EventSignup } from "./events/eventSignup";
 import { LinkHackerRankPayment } from "./events/linkHackerRankPayment";
+import { McpWorkshopSignup } from "./events/mcpWorkshopSignup";
 // Notifications
 import { GetNotifications } from "./notifications/getNotifications";
 import { CreateNotification } from "./notifications/createNotification";
@@ -97,6 +98,7 @@ openapi.delete("/auth/passkeys/:credential_id", DeletePasskey);
 // Events
 openapi.post("/events/hackerrank_1", EventSignup);
 openapi.post("/events/hackerrank_1/payment", LinkHackerRankPayment);
+openapi.post("/events/mcp_workshop_1", McpWorkshopSignup);
 
 // Notifications
 openapi.get("/notifications", GetNotifications);
