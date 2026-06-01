@@ -629,6 +629,25 @@ export const UpdateCommentResponse = z.object({
   error: z.string().optional(),
 });
 
+// Startathon Waitlist
+export const StartathonWaitlistRequest = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  college: z.string().min(1, "College is required"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits").optional(),
+});
+
+export const StartathonWaitlistResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      waitlist_id: z.string(),
+    })
+    .optional(),
+  message: z.string().optional(),
+  error: z.string().optional(),
+});
+
 // Google OAuth schemas
 export const GoogleOAuthInitiateResponse = z.object({
   success: z.boolean(),

@@ -23,6 +23,9 @@ import { GoogleOAuthDisconnect } from "./auth/googleOauthDisconnect";
 import { EventSignup } from "./events/eventSignup";
 import { LinkHackerRankPayment } from "./events/linkHackerRankPayment";
 import { McpWorkshopSignup } from "./events/mcpWorkshopSignup";
+import { StartathonWaitlist } from "./events/startathonWaitlist";
+import { EmailOpen } from "./events/emailOpen";
+import { EmailClick } from "./events/emailClick";
 // Notifications
 import { GetNotifications } from "./notifications/getNotifications";
 import { CreateNotification } from "./notifications/createNotification";
@@ -99,6 +102,9 @@ openapi.delete("/auth/passkeys/:credential_id", DeletePasskey);
 openapi.post("/events/hackerrank_1", EventSignup);
 openapi.post("/events/hackerrank_1/payment", LinkHackerRankPayment);
 openapi.post("/events/mcp_workshop_1", McpWorkshopSignup);
+openapi.post("/events/startathon/waitlist", StartathonWaitlist);
+openapi.get("/events/email/open", EmailOpen);
+openapi.get("/events/email/click", EmailClick);
 
 // Notifications
 openapi.get("/notifications", GetNotifications);

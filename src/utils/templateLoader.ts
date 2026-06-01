@@ -5,6 +5,7 @@ import { getPasswordResetEmail as passwordResetTemplate } from "../templates/pas
 import { getWelcomeEmail as welcomeEmailTemplate } from "../templates/welcome-email";
 import { getHackerRankPaymentConfirmationEmail as hackerRankPaymentTemplate } from "../templates/hackerrank-payment-confirmation";
 import { getMcpWorkshopConfirmationEmail as mcpWorkshopTemplate } from "../templates/mcp-workshop-confirmation";
+import { getStartathonWaitlistConfirmationEmail as startathonWaitlistTemplate } from "../templates/startathon-waitlist-confirmation";
 export function getFollowUpEmail(variables: {
   studentName: string;
   studentId: string;
@@ -57,4 +58,11 @@ export function getMcpWorkshopConfirmationEmail(variables: {
   registrationId: string;
 }): string {
   return mcpWorkshopTemplate(variables);
+}
+
+export function getStartathonWaitlistConfirmationEmail(variables: {
+  name: string;
+  waitlistId: string;
+}): string {
+  return startathonWaitlistTemplate(variables);
 }

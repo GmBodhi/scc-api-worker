@@ -6,6 +6,7 @@ import {
   getWelcomeEmail,
   getHackerRankPaymentConfirmationEmail,
   getMcpWorkshopConfirmationEmail,
+  getStartathonWaitlistConfirmationEmail,
 } from "../utils/templateLoader";
 
 interface EmailOptions {
@@ -146,6 +147,21 @@ export class EmailService {
       to: email,
       toName: name,
       subject: "🎉 Registration Confirmed — MCP Workshop, March 14",
+      html,
+    });
+  }
+
+  async sendStartathonWaitlistEmail(
+    name: string,
+    email: string,
+    waitlistId: string,
+  ): Promise<boolean> {
+    const html = getStartathonWaitlistConfirmationEmail({ name, waitlistId });
+
+    return this.sendEmail({
+      to: email,
+      toName: name,
+      subject: "You're on the list. — Startathon 2026",
       html,
     });
   }
