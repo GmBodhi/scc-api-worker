@@ -25,6 +25,9 @@ import { LinkHackerRankPayment } from "./events/linkHackerRankPayment";
 import { McpWorkshopSignup } from "./events/mcpWorkshopSignup";
 import { StartathonWaitlist } from "./events/startathonWaitlist";
 import { StartathonRegister } from "./events/startathon/register";
+import { StartathonLogin } from "./events/startathon/login";
+import { StartathonPasswordResetRequest } from "./events/startathon/passwordResetRequest";
+import { StartathonPasswordResetVerify } from "./events/startathon/passwordResetVerify";
 import { EmailOpen } from "./events/emailOpen";
 import { EmailClick } from "./events/emailClick";
 // Notifications
@@ -107,6 +110,15 @@ openapi.post("/events/startathon/waitlist", StartathonWaitlist);
 
 // Startathon (standalone module — startathon.sctcoding.club)
 openapi.post("/events/startathon/register", StartathonRegister);
+openapi.post("/events/startathon/auth/login", StartathonLogin);
+openapi.post(
+  "/events/startathon/auth/password/reset",
+  StartathonPasswordResetRequest,
+);
+openapi.post(
+  "/events/startathon/auth/password/reset/verify",
+  StartathonPasswordResetVerify,
+);
 openapi.get("/events/email/open", EmailOpen);
 openapi.get("/events/email/click", EmailClick);
 
