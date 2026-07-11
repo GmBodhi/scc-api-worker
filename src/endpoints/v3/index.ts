@@ -31,6 +31,8 @@ import { StartathonPasswordResetVerify } from "./events/startathon/passwordReset
 import { StartathonGetTeam } from "./events/startathon/getTeam";
 import { StartathonTransactionIngest } from "./events/startathon/transactionIngest";
 import { StartathonLinkPayment } from "./events/startathon/linkPayment";
+import { StartathonGoogleInitiate } from "./events/startathon/googleInitiate";
+import { StartathonGoogleCallback } from "./events/startathon/googleCallback";
 import { EmailOpen } from "./events/emailOpen";
 import { EmailClick } from "./events/emailClick";
 // Notifications
@@ -125,6 +127,11 @@ openapi.post(
 openapi.get("/events/startathon/team", StartathonGetTeam);
 openapi.post("/events/startathon/transaction", StartathonTransactionIngest);
 openapi.post("/events/startathon/payment", StartathonLinkPayment);
+openapi.get("/events/startathon/auth/google", StartathonGoogleInitiate);
+openapi.get(
+  "/events/startathon/auth/google/callback",
+  StartathonGoogleCallback,
+);
 openapi.get("/events/email/open", EmailOpen);
 openapi.get("/events/email/click", EmailClick);
 
