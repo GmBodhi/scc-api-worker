@@ -8,6 +8,9 @@ import {
   getMcpWorkshopConfirmationEmail,
   getStartathonWaitlistConfirmationEmail,
 } from "../utils/templateLoader";
+import { getStartathonAccountSetupEmail } from "../templates/startathon-account-setup";
+import { getStartathonPasswordResetEmail } from "../templates/startathon-password-reset";
+import { getStartathonPaymentConfirmationEmail } from "../templates/startathon-payment-confirmation";
 
 interface EmailOptions {
   to: string;
@@ -162,6 +165,67 @@ export class EmailService {
       to: email,
       toName: name,
       subject: "You're on the list. — Startathon 2026",
+      html,
+    });
+  }
+
+  async sendStartathonAccountSetupEmail(
+    name: string,
+    email: string,
+    teamName: string,
+    teamId: string,
+    role: string,
+    resetToken: string,
+  ): Promise<boolean> {
+    const html = getStartathonAccountSetupEmail({
+      name,
+      teamName,
+      teamId,
+      role,
+      resetToken,
+    });
+
+    return this.sendEmail({
+      to: email,
+      toName: name,
+      subject: `🚀 Team "${teamName}" is registered for Startathon — set your password`,
+      html,
+    });
+  }
+
+  async sendStartathonPasswordResetEmail(
+    name: string,
+    email: string,
+    resetToken: string,
+  ): Promise<boolean> {
+    const html = getStartathonPasswordResetEmail({ name, resetToken });
+
+    return this.sendEmail({
+      to: email,
+      toName: name,
+      subject: "🔐 Reset your Startathon password",
+      html,
+    });
+  }
+
+  async sendStartathonPaymentConfirmationEmail(
+    name: string,
+    email: string,
+    teamName: string,
+    teamId: string,
+    transactionRef: string,
+  ): Promise<boolean> {
+    const html = getStartathonPaymentConfirmationEmail({
+      name,
+      teamName,
+      teamId,
+      transactionRef,
+    });
+
+    return this.sendEmail({
+      to: email,
+      toName: name,
+      subject: "🎉 Startathon payment confirmed!",
       html,
     });
   }
