@@ -119,14 +119,30 @@ export class StartathonLinkPayment extends OpenAPIRoute {
       }
 
       const now = Math.floor(Date.now() / 1000);
-      await c.env.EVENTS_DB.batch([
-        c.env.EVENTS_DB.prepare(
-          "UPDATE startathon_transactions SET status = 'used', updatedAt = ? WHERE ref = ?",
-        ).bind(new Date().toISOString(), transaction_id),
-        c.env.EVENTS_DB.prepare(
-          "UPDATE startathon_teams SET status = 'confirmed', transaction_ref = ?, updated_at = ? WHERE team_id = ?",
-        ).bind(transaction_id, now, user.team_id),
-      ]);
+
+      // Guard against a concurrent request racing us for the same
+      // transaction ref: only flip status if it's still 'unused', and
+      // verify exactly one row was actually changed before touching the
+      // team. This closes the TOCTOU window between the SELECT above and
+      // this UPDATE.
+      const claimResult = await c.env.EVENTS_DB.prepare(
+        "UPDATE startathon_transactions SET status = 'used', updatedAt = ? WHERE ref = ? AND status = 'unused'",
+      )
+        .bind(new Date().toISOString(), transaction_id)
+        .run();
+
+      if (claimResult.meta.changes !== 1) {
+        return c.json(
+          { success: false, error: "Transaction not found or already used" },
+          400,
+        );
+      }
+
+      await c.env.EVENTS_DB.prepare(
+        "UPDATE startathon_teams SET status = 'confirmed', transaction_ref = ?, updated_at = ? WHERE team_id = ?",
+      )
+        .bind(transaction_id, now, user.team_id)
+        .run();
 
       // Confirmation email to every member (non-fatal)
       try {
