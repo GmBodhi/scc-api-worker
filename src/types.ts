@@ -683,3 +683,98 @@ export const GoogleOAuthCallbackResponse = z.object({
     .optional(),
   error: z.string().optional(),
 });
+
+// ============================================================
+// Startathon (standalone module — startathon.sctcoding.club)
+// ============================================================
+
+export const StartathonMemberInput = z.object({
+  name: z.string().min(1).max(100),
+  email: z.string().email(),
+  phone: z.string().min(10).max(15).optional(),
+  college: z.string().min(1).max(150).optional(),
+});
+
+export const StartathonRegisterRequest = z.object({
+  team_name: z.string().min(2).max(60),
+  leader: z.object({
+    name: z.string().min(1).max(100),
+    email: z.string().email(),
+    phone: z.string().min(10).max(15),
+    college: z.string().min(1).max(150),
+  }),
+  members: z.array(StartathonMemberInput).min(2).max(3),
+});
+
+export const StartathonParticipant = z.object({
+  user_id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  role: z.enum(["leader", "member"]),
+});
+
+export const StartathonRegisterResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      team_id: z.string(),
+      team_name: z.string(),
+      status: z.string(),
+      participants: z.array(StartathonParticipant),
+    })
+    .optional(),
+  message: z.string().optional(),
+  error: z.string().optional(),
+});
+
+export const StartathonLoginRequest = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
+
+export const StartathonAuthResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      access_token: z.string(),
+      expires_in: z.number(),
+      user: z.object({
+        user_id: z.string(),
+        team_id: z.string(),
+        role: z.enum(["leader", "member"]),
+        name: z.string(),
+        email: z.string(),
+      }),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const StartathonPasswordResetRequestSchema = z.object({
+  email: z.string().email(),
+});
+
+export const StartathonPasswordResetVerifySchema = z.object({
+  token: z.string().min(1),
+  new_password: z.string().min(8).max(100),
+});
+
+export const StartathonTeamResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      team_id: z.string(),
+      team_name: z.string(),
+      status: z.string(),
+      transaction_ref: z.string().nullable(),
+      created_at: z.number(),
+      your_role: z.enum(["leader", "member"]),
+      members: z.array(StartathonParticipant),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const StartathonPaymentRequest = z.object({
+  transaction_id: z.string().min(1),
+});
