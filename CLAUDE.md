@@ -35,6 +35,18 @@ This is a Cloudflare Worker project that provides an OpenAPI 3.1 compliant REST 
 - `POST /api/email-test` - Test email functionality
 - `POST /api/initialize-sheets` - Initialize Google Sheets with headers
 
+### Startathon Module (standalone — client: startathon.sctcoding.club)
+
+Self-contained team registration/auth/payment. Own tables (`startathon_teams`, `startathon_users`, `startathon_reset_tokens`, `startathon_transactions`); shares only Google client credentials, `JWT_SECRET`, Brevo, and the HDFC parser. JWTs carry `aud: "startathon"`.
+
+- `POST /api/v3/events/startathon/register` - Register team (1 leader + 2-3 members, public)
+- `POST /api/v3/events/startathon/auth/login` - Email/password login
+- `GET /api/v3/events/startathon/auth/google` + `/callback` - Google login (login-only, no signup)
+- `POST /api/v3/events/startathon/auth/password/reset` + `/verify` - Password set/reset
+- `GET /api/v3/events/startathon/team` - My team + payment status
+- `POST /api/v3/events/startathon/transaction` - Webhook ingest (₹100 fee, TOKEN-guarded)
+- `POST /api/v3/events/startathon/payment` - Leader links UPI ref, team → confirmed
+
 ### Scheduled Jobs
 
 - **Cron Schedule**: Every 30 minutes (`*/30 * * * *`)
