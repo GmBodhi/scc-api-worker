@@ -28,6 +28,7 @@ import { StartathonRegister } from "./events/startathon/register";
 import { StartathonLogin } from "./events/startathon/login";
 import { StartathonPasswordResetRequest } from "./events/startathon/passwordResetRequest";
 import { StartathonPasswordResetVerify } from "./events/startathon/passwordResetVerify";
+import { StartathonGetTeam } from "./events/startathon/getTeam";
 import { EmailOpen } from "./events/emailOpen";
 import { EmailClick } from "./events/emailClick";
 // Notifications
@@ -119,6 +120,7 @@ openapi.post(
   "/events/startathon/auth/password/reset/verify",
   StartathonPasswordResetVerify,
 );
+openapi.get("/events/startathon/team", StartathonGetTeam);
 openapi.get("/events/email/open", EmailOpen);
 openapi.get("/events/email/click", EmailClick);
 
