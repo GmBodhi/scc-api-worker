@@ -9,8 +9,8 @@ import { verifyStartathonJWT } from "../utils/startathonJwt";
 
 export interface StartathonAuthUser {
   user_id: string;
-  team_id: string;
-  role: "leader" | "member";
+  team_id: string | null;
+  role: "leader" | "member" | null;
   name: string;
   email: string;
   phone: string | null;
@@ -54,8 +54,8 @@ export async function requireStartathonAuth(
     success: true,
     user: {
       user_id: user.user_id as string,
-      team_id: user.team_id as string,
-      role: user.role as "leader" | "member",
+      team_id: (user.team_id as string) || null,
+      role: (user.role as "leader" | "member") || null,
       name: user.name as string,
       email: user.email as string,
       phone: (user.phone as string) || null,
