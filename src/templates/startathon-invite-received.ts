@@ -1,17 +1,15 @@
 const CLIENT_URL = "https://startathon.sctcoding.club";
 
-interface StartathonAccountSetupInviteData {
+interface StartathonInviteReceivedData {
   name: string;
   teamName: string;
   invitedByName: string;
-  resetToken: string;
 }
 
-export function getStartathonAccountSetupInviteEmail(
-  data: StartathonAccountSetupInviteData,
+export function getStartathonInviteReceivedEmail(
+  data: StartathonInviteReceivedData,
 ): string {
-  const { name, teamName, invitedByName, resetToken } = data;
-  const setupUrl = `${CLIENT_URL}/reset-password?token=${encodeURIComponent(resetToken)}`;
+  const { name, teamName, invitedByName } = data;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,13 +30,10 @@ export function getStartathonAccountSetupInviteEmail(
                 <strong style="color:#ffffff;">${invitedByName}</strong> invited you to join team
                 <strong style="color:#ffffff;">${teamName}</strong> for Startathon.
               </p>
-              <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#bbbbbb;">
-                Set a password to activate your account, or simply continue with Google using this
-                email address — either way, once you're signed in, accept the invite from your
-                dashboard.
+              <p style="margin:0;font-size:14px;line-height:1.6;color:#bbbbbb;">
+                Log in to <a href="${CLIENT_URL}" style="color:rgba(200,255,0,0.9);">startathon.sctcoding.club</a>
+                and check your invites to accept or decline.
               </p>
-              <a href="${setupUrl}" style="display:inline-block;background:rgba(200,255,0,0.9);color:#000000;font-size:14px;font-weight:700;text-decoration:none;padding:12px 24px;border-radius:8px;">Set your password</a>
-              <p style="margin:24px 0 0;font-size:12px;color:#666666;">This link is valid for 7 days. If you weren't expecting this email, you can ignore it.</p>
             </td>
           </tr>
         </table>

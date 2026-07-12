@@ -8,7 +8,8 @@ import {
   getMcpWorkshopConfirmationEmail,
   getStartathonWaitlistConfirmationEmail,
 } from "../utils/templateLoader";
-import { getStartathonAccountSetupEmail } from "../templates/startathon-account-setup";
+import { getStartathonAccountSetupInviteEmail } from "../templates/startathon-account-setup";
+import { getStartathonInviteReceivedEmail } from "../templates/startathon-invite-received";
 import { getStartathonPasswordResetEmail } from "../templates/startathon-password-reset";
 import { getStartathonPaymentConfirmationEmail } from "../templates/startathon-payment-confirmation";
 
@@ -169,26 +170,44 @@ export class EmailService {
     });
   }
 
-  async sendStartathonAccountSetupEmail(
+  async sendStartathonAccountSetupInviteEmail(
     name: string,
     email: string,
     teamName: string,
-    teamId: string,
-    role: string,
+    invitedByName: string,
     resetToken: string,
   ): Promise<boolean> {
-    const html = getStartathonAccountSetupEmail({
+    const html = getStartathonAccountSetupInviteEmail({
       name,
       teamName,
-      teamId,
-      role,
+      invitedByName,
       resetToken,
     });
 
     return this.sendEmail({
       to: email,
       toName: name,
-      subject: `🚀 Team "${teamName}" is registered for Startathon — set your password`,
+      subject: `🚀 You're invited to join "${teamName}" on Startathon`,
+      html,
+    });
+  }
+
+  async sendStartathonInviteReceivedEmail(
+    name: string,
+    email: string,
+    teamName: string,
+    invitedByName: string,
+  ): Promise<boolean> {
+    const html = getStartathonInviteReceivedEmail({
+      name,
+      teamName,
+      invitedByName,
+    });
+
+    return this.sendEmail({
+      to: email,
+      toName: name,
+      subject: `🚀 You're invited to join "${teamName}" on Startathon`,
       html,
     });
   }
