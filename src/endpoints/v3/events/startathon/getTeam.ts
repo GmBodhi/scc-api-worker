@@ -8,7 +8,8 @@ import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
 
 /**
  * GET /api/v3/events/startathon/team
- * Get the authenticated user's team, members, and payment status
+ * Get the authenticated user's team, members, and payment status.
+ * 404 if the caller has no team yet.
  */
 export class StartathonGetTeam extends OpenAPIRoute {
   schema = {
@@ -25,6 +26,14 @@ export class StartathonGetTeam extends OpenAPIRoute {
       },
       "401": {
         description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: ErrorResponse,
+          },
+        },
+      },
+      "404": {
+        description: "Caller has no team yet",
         content: {
           "application/json": {
             schema: ErrorResponse,
@@ -53,6 +62,13 @@ export class StartathonGetTeam extends OpenAPIRoute {
       }
       const user = authResult.user;
 
+      if (!user.team_id || !user.role) {
+        return c.json(
+          { success: false, error: "You don't have a team yet" },
+          404,
+        );
+      }
+
       const team = await c.env.EVENTS_DB.prepare(
         "SELECT * FROM startathon_teams WHERE team_id = ?",
       )
@@ -60,7 +76,6 @@ export class StartathonGetTeam extends OpenAPIRoute {
         .first();
 
       if (!team) {
-        // Cannot happen normally: users are only created with a team
         return c.json({ success: false, error: "Team not found" }, 500);
       }
 
@@ -75,6 +90,7 @@ export class StartathonGetTeam extends OpenAPIRoute {
         data: {
           team_id: team.team_id as string,
           team_name: team.team_name as string,
+          join_code: team.join_code as string,
           status: team.status as string,
           transaction_ref: (team.transaction_ref as string) || null,
           created_at: team.created_at as number,
