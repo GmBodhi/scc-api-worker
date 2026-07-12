@@ -37,13 +37,20 @@ This is a Cloudflare Worker project that provides an OpenAPI 3.1 compliant REST 
 
 ### Startathon Module (standalone — client: startathon.sctcoding.club)
 
-Self-contained team registration/auth/payment. Own tables (`startathon_teams`, `startathon_users`, `startathon_reset_tokens`, `startathon_transactions`); shares only Google client credentials, `JWT_SECRET`, Brevo, and the HDFC parser. JWTs carry `aud: "startathon"`.
+Self-contained account/team/payment system. Own tables (`startathon_teams`, `startathon_users`, `startathon_invites`, `startathon_reset_tokens`, `startathon_transactions`); shares only Google client credentials, `JWT_SECRET`, Brevo, and the HDFC parser. JWTs carry `aud: "startathon"`. Accounts are independent of teams — users sign up first (email/password or Google, both create-or-login), then create or join a team separately.
 
-- `POST /api/v3/events/startathon/register` - Register team (1 leader + 2-3 members, public)
+- `POST /api/v3/events/startathon/auth/signup` - Create account (public, no team assigned)
 - `POST /api/v3/events/startathon/auth/login` - Email/password login
-- `GET /api/v3/events/startathon/auth/google` + `/callback` - Google login (login-only, no signup)
+- `GET /api/v3/events/startathon/auth/google` + `/callback` - Google sign-up-or-login
 - `POST /api/v3/events/startathon/auth/password/reset` + `/verify` - Password set/reset
-- `GET /api/v3/events/startathon/team` - My team + payment status
+- `POST /api/v3/events/startathon/team` - Create a team (caller becomes leader)
+- `GET /api/v3/events/startathon/team` - My team + payment status (404 if none)
+- `POST /api/v3/events/startathon/team/invite` - Leader invites by email (creates account if needed)
+- `POST /api/v3/events/startathon/team/join` - Join a team by `join_code`
+- `POST /api/v3/events/startathon/team/leave` - Leave (member) or delete the team (leader)
+- `POST /api/v3/events/startathon/team/members/:user_id/kick` - Leader removes a member
+- `GET /api/v3/events/startathon/invites` - My pending invites
+- `POST /api/v3/events/startathon/invites/:id/accept` + `/decline` - Respond to an invite
 - `POST /api/v3/events/startathon/transaction` - Webhook ingest (₹100 fee, TOKEN-guarded)
 - `POST /api/v3/events/startathon/payment` - Leader links UPI ref, team → confirmed
 
