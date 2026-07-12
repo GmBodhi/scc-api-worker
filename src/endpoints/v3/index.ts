@@ -32,6 +32,8 @@ import { StartathonCreateTeam } from "./events/startathon/createTeam";
 import { StartathonGetTeam } from "./events/startathon/getTeam";
 import { StartathonInviteMember } from "./events/startathon/inviteMember";
 import { StartathonListInvites } from "./events/startathon/listInvites";
+import { StartathonAcceptInvite } from "./events/startathon/acceptInvite";
+import { StartathonDeclineInvite } from "./events/startathon/declineInvite";
 import { StartathonJoinTeam } from "./events/startathon/joinTeam";
 import { StartathonTransactionIngest } from "./events/startathon/transactionIngest";
 import { StartathonLinkPayment } from "./events/startathon/linkPayment";
@@ -132,6 +134,11 @@ openapi.post(
 openapi.get("/events/startathon/team", StartathonGetTeam);
 openapi.post("/events/startathon/team/invite", StartathonInviteMember);
 openapi.get("/events/startathon/invites", StartathonListInvites);
+openapi.post("/events/startathon/invites/:id/accept", StartathonAcceptInvite);
+openapi.post(
+  "/events/startathon/invites/:id/decline",
+  StartathonDeclineInvite,
+);
 openapi.post("/events/startathon/team/join", StartathonJoinTeam);
 openapi.post("/events/startathon/transaction", StartathonTransactionIngest);
 openapi.post("/events/startathon/payment", StartathonLinkPayment);
