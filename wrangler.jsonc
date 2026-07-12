@@ -64,7 +64,7 @@
 		"RP_ID": "sctcoding.club",
 		"ORIGIN": "https://sctcoding.club",
 		"GOOGLE_REDIRECT_URI": "https://sctcoding.club/auth/google/callback",
-		"GOOGLE_REDIRECT_URI_STARTATHON": "https://startathon.sctcoding.club/auth/google/callback",
+		"GOOGLE_REDIRECT_URI_STARTATHON": "https://dev.startathon.pages.dev/auth/google/callback",
 	},
 	"triggers": {
 		"crons": [
