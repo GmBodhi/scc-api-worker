@@ -114,11 +114,16 @@ export class StartathonJoinTeam extends OpenAPIRoute {
         return c.json({ success: false, error: "Team is full" }, 400);
       }
 
-      await c.env.EVENTS_DB.prepare(
-        "UPDATE startathon_users SET team_id = ?, role = 'member' WHERE user_id = ?",
-      )
-        .bind(team.team_id, user.user_id)
-        .run();
+      const now = Math.floor(Date.now() / 1000);
+
+      await c.env.EVENTS_DB.batch([
+        c.env.EVENTS_DB.prepare(
+          "UPDATE startathon_users SET team_id = ?, role = 'member' WHERE user_id = ?",
+        ).bind(team.team_id, user.user_id),
+        c.env.EVENTS_DB.prepare(
+          "UPDATE startathon_invites SET status = 'cancelled', responded_at = ? WHERE invited_email = ? AND status = 'pending'",
+        ).bind(now, user.email),
+      ]);
 
       console.log("Startathon joined team:", {
         user_id: user.user_id,

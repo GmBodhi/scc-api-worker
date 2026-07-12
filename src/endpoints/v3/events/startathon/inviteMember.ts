@@ -57,6 +57,14 @@ export class StartathonInviteMember extends OpenAPIRoute {
           },
         },
       },
+      "404": {
+        description: "You don't have a team yet",
+        content: {
+          "application/json": {
+            schema: ErrorResponse,
+          },
+        },
+      },
       "409": {
         description: "Invitee already on a team or already invited",
         content: {
