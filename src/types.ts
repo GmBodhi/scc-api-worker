@@ -688,43 +688,11 @@ export const GoogleOAuthCallbackResponse = z.object({
 // Startathon (standalone module — startathon.sctcoding.club)
 // ============================================================
 
-export const StartathonMemberInput = z.object({
-  name: z.string().min(1).max(100),
-  email: z.string().email(),
-  phone: z.string().min(10).max(15).optional(),
-  college: z.string().min(1).max(150).optional(),
-});
-
-export const StartathonRegisterRequest = z.object({
-  team_name: z.string().min(2).max(60),
-  leader: z.object({
-    name: z.string().min(1).max(100),
-    email: z.string().email(),
-    phone: z.string().min(10).max(15),
-    college: z.string().min(1).max(150),
-  }),
-  members: z.array(StartathonMemberInput).min(2).max(3),
-});
-
 export const StartathonParticipant = z.object({
   user_id: z.string(),
   name: z.string(),
   email: z.string(),
   role: z.enum(["leader", "member"]),
-});
-
-export const StartathonRegisterResponse = z.object({
-  success: z.boolean(),
-  data: z
-    .object({
-      team_id: z.string(),
-      team_name: z.string(),
-      status: z.string(),
-      participants: z.array(StartathonParticipant),
-    })
-    .optional(),
-  message: z.string().optional(),
-  error: z.string().optional(),
 });
 
 export const StartathonLoginRequest = z.object({
@@ -740,8 +708,8 @@ export const StartathonAuthResponse = z.object({
       expires_in: z.number(),
       user: z.object({
         user_id: z.string(),
-        team_id: z.string(),
-        role: z.enum(["leader", "member"]),
+        team_id: z.string().nullable(),
+        role: z.enum(["leader", "member"]).nullable(),
         name: z.string(),
         email: z.string(),
       }),
@@ -765,6 +733,7 @@ export const StartathonTeamResponse = z.object({
     .object({
       team_id: z.string(),
       team_name: z.string(),
+      join_code: z.string(),
       status: z.string(),
       transaction_ref: z.string().nullable(),
       created_at: z.number(),
@@ -777,4 +746,55 @@ export const StartathonTeamResponse = z.object({
 
 export const StartathonPaymentRequest = z.object({
   transaction_id: z.string().min(1),
+});
+
+export const StartathonSignupRequest = z.object({
+  name: z.string().min(1).max(100),
+  email: z.string().email(),
+  password: z.string().min(8).max(100),
+  phone: z.string().min(10).max(15),
+  college: z.string().min(1).max(150),
+});
+
+export const StartathonCreateTeamRequest = z.object({
+  team_name: z.string().min(2).max(60),
+});
+
+export const StartathonCreateTeamResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      team_id: z.string(),
+      team_name: z.string(),
+      join_code: z.string(),
+      status: z.string(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const StartathonInviteRequest = z.object({
+  email: z.string().email(),
+  name: z.string().min(1).max(100).optional(),
+});
+
+export const StartathonJoinTeamRequest = z.object({
+  join_code: z.string().min(1).max(20),
+});
+
+export const StartathonInviteListItem = z.object({
+  invite_id: z.string(),
+  team_name: z.string(),
+  invited_by: z.string(),
+  created_at: z.number(),
+});
+
+export const StartathonInvitesResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      invites: z.array(StartathonInviteListItem),
+    })
+    .optional(),
+  error: z.string().optional(),
 });
