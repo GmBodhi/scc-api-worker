@@ -91,8 +91,8 @@ export class StartathonLogin extends OpenAPIRoute {
           expires_in: 7 * 24 * 60 * 60,
           user: {
             user_id: user.user_id as string,
-            team_id: user.team_id as string,
-            role: user.role as string,
+            team_id: (user.team_id as string) || null,
+            role: (user.role as string) || null,
             name: user.name as string,
             email: user.email as string,
           },

@@ -17,14 +17,15 @@ interface GoogleUserInfo {
 /**
  * GET /api/v3/events/startathon/auth/google/callback
  * Handle Google OAuth callback for startathon.sctcoding.club.
- * Login only — unknown emails get 403 (registration is team-based).
+ * Sign-up-or-login: creates a new teamless account on first Google
+ * login (matching the main site's behavior), same as email signup.
  */
 export class StartathonGoogleCallback extends OpenAPIRoute {
   schema = {
     summary: "Handle Startathon Google OAuth callback",
     responses: {
       "200": {
-        description: "Logged in",
+        description: "Logged in or signed up",
         content: {
           "application/json": {
             schema: StartathonAuthResponse,
@@ -33,14 +34,6 @@ export class StartathonGoogleCallback extends OpenAPIRoute {
       },
       "400": {
         description: "Invalid request",
-        content: {
-          "application/json": {
-            schema: ErrorResponse,
-          },
-        },
-      },
-      "403": {
-        description: "Google account not registered for Startathon",
         content: {
           "application/json": {
             schema: ErrorResponse,
@@ -115,6 +108,7 @@ export class StartathonGoogleCallback extends OpenAPIRoute {
       }
 
       const googleUser = await userInfoResponse.json<GoogleUserInfo>();
+      const normalizedEmail = googleUser.email.toLowerCase();
 
       // Match by google_id first, then by email (link on first Google login)
       let user = await c.env.EVENTS_DB.prepare(
@@ -127,7 +121,7 @@ export class StartathonGoogleCallback extends OpenAPIRoute {
         user = await c.env.EVENTS_DB.prepare(
           "SELECT * FROM startathon_users WHERE email = ?",
         )
-          .bind(googleUser.email.toLowerCase())
+          .bind(normalizedEmail)
           .first();
 
         if (user) {
@@ -140,13 +134,31 @@ export class StartathonGoogleCallback extends OpenAPIRoute {
       }
 
       if (!user) {
+        // First-time Google user: sign them up, teamless, no password.
+        const userId = `STU_${Date.now()}_${Math.random()
+          .toString(36)
+          .substring(2, 8)
+          .toUpperCase()}`;
+        const now = Math.floor(Date.now() / 1000);
+
+        await c.env.EVENTS_DB.prepare(
+          `INSERT INTO startathon_users (user_id, name, email, google_id, created_at)
+           VALUES (?, ?, ?, ?, ?)`,
+        )
+          .bind(userId, googleUser.name, normalizedEmail, googleUser.id, now)
+          .run();
+
+        user = await c.env.EVENTS_DB.prepare(
+          "SELECT * FROM startathon_users WHERE user_id = ?",
+        )
+          .bind(userId)
+          .first();
+      }
+
+      if (!user) {
         return c.json(
-          {
-            success: false,
-            error:
-              "This Google account is not registered for Startathon. Ask your team leader to register your email.",
-          },
-          403,
+          { success: false, error: "Failed to create or retrieve account" },
+          500,
         );
       }
 
@@ -164,8 +176,8 @@ export class StartathonGoogleCallback extends OpenAPIRoute {
           expires_in: 7 * 24 * 60 * 60,
           user: {
             user_id: user.user_id as string,
-            team_id: user.team_id as string,
-            role: user.role as string,
+            team_id: (user.team_id as string) || null,
+            role: (user.role as string) || null,
             name: user.name as string,
             email: user.email as string,
           },
