@@ -30,6 +30,7 @@ import { StartathonPasswordResetRequest } from "./events/startathon/passwordRese
 import { StartathonPasswordResetVerify } from "./events/startathon/passwordResetVerify";
 import { StartathonCreateTeam } from "./events/startathon/createTeam";
 import { StartathonGetTeam } from "./events/startathon/getTeam";
+import { StartathonInviteMember } from "./events/startathon/inviteMember";
 import { StartathonTransactionIngest } from "./events/startathon/transactionIngest";
 import { StartathonLinkPayment } from "./events/startathon/linkPayment";
 import { StartathonGoogleInitiate } from "./events/startathon/googleInitiate";
@@ -127,6 +128,7 @@ openapi.post(
   StartathonPasswordResetVerify,
 );
 openapi.get("/events/startathon/team", StartathonGetTeam);
+openapi.post("/events/startathon/team/invite", StartathonInviteMember);
 openapi.post("/events/startathon/transaction", StartathonTransactionIngest);
 openapi.post("/events/startathon/payment", StartathonLinkPayment);
 openapi.get("/events/startathon/auth/google", StartathonGoogleInitiate);
