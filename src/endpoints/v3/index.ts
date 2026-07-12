@@ -39,6 +39,8 @@ import { StartathonTransactionIngest } from "./events/startathon/transactionInge
 import { StartathonLinkPayment } from "./events/startathon/linkPayment";
 import { StartathonGoogleInitiate } from "./events/startathon/googleInitiate";
 import { StartathonGoogleCallback } from "./events/startathon/googleCallback";
+import { StartathonLeaveTeam } from "./events/startathon/leaveTeam";
+import { StartathonKickMember } from "./events/startathon/kickMember";
 import { EmailOpen } from "./events/emailOpen";
 import { EmailClick } from "./events/emailClick";
 // Notifications
@@ -146,6 +148,11 @@ openapi.get("/events/startathon/auth/google", StartathonGoogleInitiate);
 openapi.get(
   "/events/startathon/auth/google/callback",
   StartathonGoogleCallback,
+);
+openapi.post("/events/startathon/team/leave", StartathonLeaveTeam);
+openapi.post(
+  "/events/startathon/team/members/:user_id/kick",
+  StartathonKickMember,
 );
 openapi.get("/events/email/open", EmailOpen);
 openapi.get("/events/email/click", EmailClick);
