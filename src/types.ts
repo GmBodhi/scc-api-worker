@@ -700,6 +700,10 @@ export const StartathonLoginRequest = z.object({
   password: z.string().min(1),
 });
 
+export const StartathonGoogleCredentialRequest = z.object({
+  credential: z.string().min(1, "Google credential is required"),
+});
+
 export const StartathonAuthResponse = z.object({
   success: z.boolean(),
   data: z

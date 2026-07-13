@@ -5,6 +5,7 @@ import {
   ErrorResponse,
 } from "../../../../types";
 import { generateStartathonJWT } from "../../../../utils/startathonJwt";
+import { findOrCreateStartathonGoogleUser } from "../../../../utils/startathonGoogleUser";
 
 interface GoogleUserInfo {
   id: string;
@@ -108,52 +109,12 @@ export class StartathonGoogleCallback extends OpenAPIRoute {
       }
 
       const googleUser = await userInfoResponse.json<GoogleUserInfo>();
-      const normalizedEmail = googleUser.email.toLowerCase();
 
-      // Match by google_id first, then by email (link on first Google login)
-      let user = await c.env.EVENTS_DB.prepare(
-        "SELECT * FROM startathon_users WHERE google_id = ?",
-      )
-        .bind(googleUser.id)
-        .first();
-
-      if (!user) {
-        user = await c.env.EVENTS_DB.prepare(
-          "SELECT * FROM startathon_users WHERE email = ?",
-        )
-          .bind(normalizedEmail)
-          .first();
-
-        if (user) {
-          await c.env.EVENTS_DB.prepare(
-            "UPDATE startathon_users SET google_id = ? WHERE user_id = ?",
-          )
-            .bind(googleUser.id, user.user_id)
-            .run();
-        }
-      }
-
-      if (!user) {
-        // First-time Google user: sign them up, teamless, no password.
-        const userId = `STU_${Date.now()}_${Math.random()
-          .toString(36)
-          .substring(2, 8)
-          .toUpperCase()}`;
-        const now = Math.floor(Date.now() / 1000);
-
-        await c.env.EVENTS_DB.prepare(
-          `INSERT INTO startathon_users (user_id, name, email, google_id, created_at)
-           VALUES (?, ?, ?, ?, ?)`,
-        )
-          .bind(userId, googleUser.name, normalizedEmail, googleUser.id, now)
-          .run();
-
-        user = await c.env.EVENTS_DB.prepare(
-          "SELECT * FROM startathon_users WHERE user_id = ?",
-        )
-          .bind(userId)
-          .first();
-      }
+      const user = await findOrCreateStartathonGoogleUser(c.env.EVENTS_DB, {
+        googleId: googleUser.id,
+        email: googleUser.email,
+        name: googleUser.name,
+      });
 
       if (!user) {
         return c.json(

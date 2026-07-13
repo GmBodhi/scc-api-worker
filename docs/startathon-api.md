@@ -125,6 +125,33 @@ Public. Same Google OAuth client as the main site (`GOOGLE_CLIENT_ID`/`GOOGLE_CL
 
 ---
 
+## 3a. Google Identity Services credential (One Tap / Sign In button)
+
+```
+POST /auth/google/credential
+```
+
+Public. An alternative to the redirect flow above for frontends using [Google Identity Services](https://developers.google.com/identity/gsi/web) (One Tap or the rendered "Sign in with Google" button) instead of a full-page redirect. Takes the ID token GIS hands back client-side and verifies it server-side — no `code`/`state` round-trip.
+
+**Request**
+```json
+{ "credential": "<Google ID token JWT from GIS>" }
+```
+
+The token is verified against Google's JWKS (`https://www.googleapis.com/oauth2/v3/certs`), checking signature, `aud` (must equal `GOOGLE_CLIENT_ID`), `iss`, and `exp`.
+
+**200 OK** — identical response shape to `/auth/login` / `/auth/google/callback`.
+
+Same account-matching semantics as §3: matches by `google_id`, falls back to `email` (linking `google_id` onto the existing row), else creates a new teamless account.
+
+**Errors**
+| Status | Cause |
+|---|---|
+| 400 | Missing/invalid `credential`, signature/audience/issuer/expiry check failed, or Google account has no email |
+| 500 | Google OAuth not configured, or internal error |
+
+---
+
 ## 4. Password reset
 
 ```
