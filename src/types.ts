@@ -712,6 +712,8 @@ export const StartathonAuthResponse = z.object({
         role: z.enum(["leader", "member"]).nullable(),
         name: z.string(),
         email: z.string(),
+        phone: z.string().nullable(),
+        college: z.string().nullable(),
       }),
     })
     .optional(),
@@ -742,6 +744,28 @@ export const StartathonTeamResponse = z.object({
     })
     .optional(),
   error: z.string().optional(),
+});
+
+export const StartathonMeResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      user_id: z.string(),
+      team_id: z.string().nullable(),
+      role: z.enum(["leader", "member"]).nullable(),
+      name: z.string(),
+      email: z.string(),
+      phone: z.string().nullable(),
+      college: z.string().nullable(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const StartathonUpdateMeRequest = z.object({
+  name: z.string().min(1).max(100).optional(),
+  phone: z.string().min(10).max(15).optional(),
+  college: z.string().min(1).max(150).optional(),
 });
 
 export const StartathonPaymentRequest = z.object({

@@ -51,7 +51,9 @@ Public — no auth. Creates an account with email + password. No team is assigne
       "team_id": null,
       "role": null,
       "name": "Alice",
-      "email": "alice@example.com"
+      "email": "alice@example.com",
+      "phone": "9999999991",
+      "college": "SCT"
     }
   }
 }
@@ -91,13 +93,15 @@ Public. Email + password → 7-day startathon JWT. Same response shape as signup
       "team_id": "ST_...",
       "role": "leader",
       "name": "Alice",
-      "email": "alice@example.com"
+      "email": "alice@example.com",
+      "phone": "9999999991",
+      "college": "SCT"
     }
   }
 }
 ```
 
-`team_id`/`role` are `null` for a teamless account.
+`team_id`/`role` are `null` for a teamless account. `phone`/`college` are `null` if not set (e.g. a Google-created account that never filled them in).
 
 **401** — `{"success": false, "error": "Invalid credentials"}` for unknown email, no password set yet, or wrong password (same message for all three, to avoid account enumeration).
 
@@ -115,7 +119,7 @@ Public. Same Google OAuth client as the main site (`GOOGLE_CLIENT_ID`/`GOOGLE_CL
 - `GET /auth/google` → `200 { success: true, data: { auth_url } }` — send the user here.
 - `GET /auth/google/callback?code=...&state=...` — handled after Google redirects back.
 
-**Creates an account on first login** (unlike the old design). Matches by `google_id`, then falls back to matching by `email` and links `google_id` onto that existing row. If no match, a new teamless account is created (no password set). Response shape is identical to `/auth/login`.
+**Creates an account on first login** (unlike the old design). Matches by `google_id`, then falls back to matching by `email` and links `google_id` onto that existing row. If no match, a new teamless account is created (no password set, `phone`/`college` are `null` until the user sets them via `PATCH /me`). Response shape is identical to `/auth/login`.
 
 **400** — missing `code`/`state`, failed token exchange, or failed to fetch Google user info.
 
@@ -144,7 +148,78 @@ Always `200` with a generic message — does not reveal whether the email exists
 
 ---
 
-## 5. Create a team
+## 5. Get my account
+
+```
+GET /me
+```
+
+Requires `Authorization: Bearer <access_token>`. Returns the caller's own account info — no team/invite data, just the user row.
+
+**200 OK**
+```json
+{
+  "success": true,
+  "data": {
+    "user_id": "STU_...",
+    "team_id": "ST_...",
+    "role": "leader",
+    "name": "Alice",
+    "email": "alice@example.com",
+    "phone": "9999999991",
+    "college": "SCT"
+  }
+}
+```
+
+`team_id`/`role`/`phone`/`college` are `null` when not set. `email` is not editable via the API (see below).
+
+**401** — missing/invalid/wrong-audience token.
+
+---
+
+## 6. Update my account
+
+```
+PATCH /me
+```
+
+Requires `Authorization: Bearer <access_token>`. Updates any subset of `name`, `phone`, `college`. **Email is not editable** here — it's the account's unique identifier and invites are matched by it (see §11); changing it is a separate concern not yet supported.
+
+**Request** (all fields optional, but at least one is required)
+```json
+{ "name": "Alice B.", "phone": "9999999992", "college": "SCT CE" }
+```
+- `name`: 1–100 characters.
+- `phone`: 10–15 characters.
+- `college`: 1–150 characters.
+
+**200 OK** — same shape as `GET /me`, reflecting the update:
+```json
+{
+  "success": true,
+  "data": {
+    "user_id": "STU_...",
+    "team_id": "ST_...",
+    "role": "leader",
+    "name": "Alice B.",
+    "email": "alice@example.com",
+    "phone": "9999999992",
+    "college": "SCT CE"
+  }
+}
+```
+
+**Errors**
+| Status | Cause |
+|---|---|
+| 400 | Body has no updatable fields (all omitted), or Zod validation failure on a provided field |
+| 401 | Missing/invalid token |
+| 500 | Internal error |
+
+---
+
+## 7. Create a team
 
 ```
 POST /team
@@ -180,7 +255,7 @@ Requires `Authorization: Bearer <access_token>`. Caller must not already be on a
 
 ---
 
-## 6. Get my team
+## 8. Get my team
 
 ```
 GET /team
@@ -214,7 +289,7 @@ Members are ordered leader-first, then alphabetically. A team has 1–4 members 
 
 ---
 
-## 7. Invite a member
+## 9. Invite a member
 
 ```
 POST /team/invite
@@ -249,7 +324,7 @@ Requires `Authorization: Bearer <access_token>` — **leader only**. If no accou
 
 ---
 
-## 8. Join a team by code
+## 10. Join a team by code
 
 ```
 POST /team/join
@@ -278,7 +353,7 @@ Requires `Authorization: Bearer <access_token>`. Immediate — no accept step, s
 
 ---
 
-## 9. List my invites
+## 11. List my invites
 
 ```
 GET /invites
@@ -307,7 +382,7 @@ Requires `Authorization: Bearer <access_token>`. Returns the caller's own pendin
 
 ---
 
-## 10. Accept / decline an invite
+## 12. Accept / decline an invite
 
 ```
 POST /invites/:id/accept
@@ -341,7 +416,7 @@ Requires `Authorization: Bearer <access_token>`. The invite must be addressed to
 
 ---
 
-## 11. Leave my team
+## 13. Leave my team
 
 ```
 POST /team/leave
@@ -369,7 +444,7 @@ Locked once the team's `status` is no longer `payment-pending` (i.e. `confirmed`
 
 ---
 
-## 12. Kick a member
+## 14. Kick a member
 
 ```
 POST /team/members/:user_id/kick
@@ -393,7 +468,7 @@ Requires `Authorization: Bearer <access_token>` — **leader only**. Cannot targ
 
 ---
 
-## 13. Transaction ingest (webhook)
+## 15. Transaction ingest (webhook)
 
 ```
 POST /transaction
@@ -413,7 +488,7 @@ Only **₹100** transactions are accepted (the flat team fee). Duplicate UPI ref
 
 ---
 
-## 14. Link payment
+## 16. Link payment
 
 ```
 POST /payment
@@ -467,5 +542,6 @@ team (payment-pending)
 ```
 
 - A `startathon_users` row is created by `/auth/signup`, Google sign-up-or-login, or `/team/invite` (for a brand-new invitee email) — always teamless at creation.
+- Account fields (`name`, `phone`, `college`) can be viewed with `GET /me` and edited with `PATCH /me` at any time; `email` is fixed at account creation.
 - One team per user at a time; `team_name` is globally unique; a team caps at 4 members (1 leader + up to 3 more).
 - `/team/invite` never adds someone to the team directly — it only creates a pending `startathon_invites` row; the invitee must `POST /invites/:id/accept` (or the leader can instead share the `join_code` for `POST /team/join`, which has no accept step).

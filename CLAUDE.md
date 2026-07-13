@@ -45,6 +45,8 @@ Self-contained account/team/payment system. Own tables (`startathon_teams`, `sta
 - `POST /api/v3/events/startathon/auth/password/reset` + `/verify` - Password set/reset
 - `POST /api/v3/events/startathon/team` - Create a team (caller becomes leader)
 - `GET /api/v3/events/startathon/team` - My team + payment status (404 if none)
+- `GET /api/v3/events/startathon/me` - My account info (user_id, team_id, role, name, email, phone, college)
+- `PATCH /api/v3/events/startathon/me` - Update my name/phone/college (email not editable)
 - `POST /api/v3/events/startathon/team/invite` - Leader invites by email (creates account if needed)
 - `POST /api/v3/events/startathon/team/join` - Join a team by `join_code`
 - `POST /api/v3/events/startathon/team/leave` - Leave (member) or delete the team (leader)

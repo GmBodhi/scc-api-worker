@@ -30,6 +30,8 @@ import { StartathonPasswordResetRequest } from "./events/startathon/passwordRese
 import { StartathonPasswordResetVerify } from "./events/startathon/passwordResetVerify";
 import { StartathonCreateTeam } from "./events/startathon/createTeam";
 import { StartathonGetTeam } from "./events/startathon/getTeam";
+import { StartathonGetMe } from "./events/startathon/getMe";
+import { StartathonUpdateMe } from "./events/startathon/updateMe";
 import { StartathonInviteMember } from "./events/startathon/inviteMember";
 import { StartathonListInvites } from "./events/startathon/listInvites";
 import { StartathonAcceptInvite } from "./events/startathon/acceptInvite";
@@ -134,6 +136,8 @@ openapi.post(
   StartathonPasswordResetVerify,
 );
 openapi.get("/events/startathon/team", StartathonGetTeam);
+openapi.get("/events/startathon/me", StartathonGetMe);
+openapi.patch("/events/startathon/me", StartathonUpdateMe);
 openapi.post("/events/startathon/team/invite", StartathonInviteMember);
 openapi.get("/events/startathon/invites", StartathonListInvites);
 openapi.post("/events/startathon/invites/:id/accept", StartathonAcceptInvite);
