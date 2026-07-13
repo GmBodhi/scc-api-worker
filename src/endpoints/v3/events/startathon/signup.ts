@@ -112,6 +112,8 @@ export class StartathonSignup extends OpenAPIRoute {
               role: null,
               name,
               email: normalizedEmail,
+              phone: phone || null,
+              college: college || null,
             },
           },
         },

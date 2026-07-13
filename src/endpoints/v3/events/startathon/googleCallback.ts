@@ -180,6 +180,8 @@ export class StartathonGoogleCallback extends OpenAPIRoute {
             role: (user.role as string) || null,
             name: user.name as string,
             email: user.email as string,
+            phone: (user.phone as string) || null,
+            college: (user.college as string) || null,
           },
         },
       });
