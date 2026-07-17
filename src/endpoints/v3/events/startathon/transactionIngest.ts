@@ -3,6 +3,7 @@ import { type AppContext, RawTransaction } from "../../../../types";
 import { parseTransactionHDFC } from "../../../../services/transaction";
 
 const STARTATHON_FEE = 100;
+const STARTATHON_REFERRAL_FEE = 90;
 
 /**
  * POST /api/v3/events/startathon/transaction
@@ -41,7 +42,11 @@ export class StartathonTransactionIngest extends OpenAPIRoute {
 
     const extracted = parseTransactionHDFC(rawTxn);
 
-    if (!extracted || extracted.amount !== STARTATHON_FEE) {
+    if (
+      !extracted ||
+      (extracted.amount !== STARTATHON_FEE &&
+        extracted.amount !== STARTATHON_REFERRAL_FEE)
+    ) {
       c.status(400);
       return c.json({ error: "Invalid transaction data" });
     }
