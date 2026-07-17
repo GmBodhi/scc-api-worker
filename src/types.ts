@@ -745,6 +745,10 @@ export const StartathonTeamResponse = z.object({
       created_at: z.number(),
       your_role: z.enum(["leader", "member"]),
       members: z.array(StartathonParticipant),
+      referral_code: z.string(),
+      referred_by: z.string().nullable(),
+      expected_fee: z.number(),
+      referral_count: z.number().nullable().optional(),
     })
     .optional(),
   error: z.string().optional(),
@@ -795,7 +799,23 @@ export const StartathonCreateTeamResponse = z.object({
       team_id: z.string(),
       team_name: z.string(),
       join_code: z.string(),
+      referral_code: z.string(),
       status: z.string(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const StartathonReferralRequest = z.object({
+  referral_code: z.string().min(1).max(20),
+});
+
+export const StartathonReferralResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      referred_by: z.string(),
+      expected_fee: z.number(),
     })
     .optional(),
   error: z.string().optional(),
