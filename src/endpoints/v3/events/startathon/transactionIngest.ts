@@ -1,13 +1,17 @@
 import { OpenAPIRoute } from "chanfana";
-import { type AppContext, RawTransaction } from "../../../../types";
+import {
+  type AppContext,
+  RawTransaction,
+  STARTATHON_TEAM_FEE,
+  STARTATHON_TEAM_REFERRAL_FEE,
+} from "../../../../types";
 import { parseTransactionHDFC } from "../../../../services/transaction";
-
-const STARTATHON_FEE = 100;
 
 /**
  * POST /api/v3/events/startathon/transaction
  * Webhook ingest for raw bank SMS. Guarded by the shared TOKEN header.
- * Accepts only ₹100 transactions (flat team fee); stores as 'unused'.
+ * Accepts ₹100 (flat team fee) or ₹90 (referral discount) transactions;
+ * stores as 'unused'.
  */
 export class StartathonTransactionIngest extends OpenAPIRoute {
   schema = {
@@ -41,7 +45,11 @@ export class StartathonTransactionIngest extends OpenAPIRoute {
 
     const extracted = parseTransactionHDFC(rawTxn);
 
-    if (!extracted || extracted.amount !== STARTATHON_FEE) {
+    if (
+      !extracted ||
+      (extracted.amount !== STARTATHON_TEAM_FEE &&
+        extracted.amount !== STARTATHON_TEAM_REFERRAL_FEE)
+    ) {
       c.status(400);
       return c.json({ error: "Invalid transaction data" });
     }

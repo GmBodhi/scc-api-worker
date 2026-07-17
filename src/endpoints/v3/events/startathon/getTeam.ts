@@ -3,6 +3,8 @@ import {
   type AppContext,
   StartathonTeamResponse,
   ErrorResponse,
+  STARTATHON_TEAM_FEE,
+  STARTATHON_TEAM_REFERRAL_FEE,
 } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
 
@@ -85,12 +87,28 @@ export class StartathonGetTeam extends OpenAPIRoute {
         .bind(user.team_id)
         .all();
 
+      let referralCount: number | null = null;
+      if (user.role === "leader") {
+        const countRow = await c.env.EVENTS_DB.prepare(
+          "SELECT COUNT(*) as cnt FROM startathon_teams WHERE referred_by = ? AND status = 'confirmed'",
+        )
+          .bind(user.team_id)
+          .first();
+        referralCount = (countRow?.cnt as number) ?? 0;
+      }
+
       return c.json({
         success: true,
         data: {
           team_id: team.team_id as string,
           team_name: team.team_name as string,
           join_code: team.join_code as string,
+          referral_code: team.referral_code as string,
+          referred_by: (team.referred_by as string) || null,
+          expected_fee: team.referred_by
+            ? STARTATHON_TEAM_REFERRAL_FEE
+            : STARTATHON_TEAM_FEE,
+          referral_count: referralCount,
           status: team.status as string,
           transaction_ref: (team.transaction_ref as string) || null,
           created_at: team.created_at as number,

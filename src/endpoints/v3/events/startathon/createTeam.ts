@@ -98,13 +98,14 @@ export class StartathonCreateTeam extends OpenAPIRoute {
         Math.random().toString(36).substring(2, 8).toUpperCase();
       const teamId = `ST_${Date.now()}_${rand()}`;
       const joinCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      const referralCode = Math.random().toString(36).substring(2, 10).toUpperCase();
       const now = Math.floor(Date.now() / 1000);
 
       await c.env.EVENTS_DB.batch([
         c.env.EVENTS_DB.prepare(
-          `INSERT INTO startathon_teams (team_id, team_name, leader_id, join_code, status, created_at)
-           VALUES (?, ?, ?, ?, 'payment-pending', ?)`,
-        ).bind(teamId, team_name, user.user_id, joinCode, now),
+          `INSERT INTO startathon_teams (team_id, team_name, leader_id, join_code, referral_code, status, created_at)
+           VALUES (?, ?, ?, ?, ?, 'payment-pending', ?)`,
+        ).bind(teamId, team_name, user.user_id, joinCode, referralCode, now),
         c.env.EVENTS_DB.prepare(
           "UPDATE startathon_users SET team_id = ?, role = 'leader' WHERE user_id = ?",
         ).bind(teamId, user.user_id),
@@ -119,6 +120,7 @@ export class StartathonCreateTeam extends OpenAPIRoute {
             team_id: teamId,
             team_name,
             join_code: joinCode,
+            referral_code: referralCode,
             status: "payment-pending",
           },
         },

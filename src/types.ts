@@ -688,6 +688,10 @@ export const GoogleOAuthCallbackResponse = z.object({
 // Startathon (standalone module — startathon.sctcoding.club)
 // ============================================================
 
+// Team fee: ₹100 flat, or ₹90 if the team applied a valid referral code.
+export const STARTATHON_TEAM_FEE = 100;
+export const STARTATHON_TEAM_REFERRAL_FEE = 90;
+
 export const StartathonParticipant = z.object({
   user_id: z.string(),
   name: z.string(),
@@ -745,6 +749,10 @@ export const StartathonTeamResponse = z.object({
       created_at: z.number(),
       your_role: z.enum(["leader", "member"]),
       members: z.array(StartathonParticipant),
+      referral_code: z.string(),
+      referred_by: z.string().nullable(),
+      expected_fee: z.number(),
+      referral_count: z.number().nullable().optional(),
     })
     .optional(),
   error: z.string().optional(),
@@ -795,7 +803,23 @@ export const StartathonCreateTeamResponse = z.object({
       team_id: z.string(),
       team_name: z.string(),
       join_code: z.string(),
+      referral_code: z.string(),
       status: z.string(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const StartathonReferralRequest = z.object({
+  referral_code: z.string().min(1).max(20),
+});
+
+export const StartathonReferralResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      referred_by: z.string(),
+      expected_fee: z.number(),
     })
     .optional(),
   error: z.string().optional(),

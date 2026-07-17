@@ -3,20 +3,22 @@ import {
   type AppContext,
   StartathonPaymentRequest,
   ErrorResponse,
+  STARTATHON_TEAM_FEE,
+  STARTATHON_TEAM_REFERRAL_FEE,
 } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
 import { EmailService } from "../../../../services/emailService";
 
 /**
  * POST /api/v3/events/startathon/payment
- * Leader links the team's ₹100 UPI payment. Confirms the team and
- * emails every member.
+ * Leader links the team's ₹100 (or ₹90 with a referral) UPI payment.
+ * Confirms the team and emails every member.
  */
 export class StartathonLinkPayment extends OpenAPIRoute {
   schema = {
     summary: "Link payment to Startathon team",
     description:
-      "Team leader submits the UPI reference of the ₹100 team fee. On success the team status becomes 'confirmed'.",
+      "Team leader submits the UPI reference of the team fee (₹100, or ₹90 if a referral was applied). On success the team status becomes 'confirmed'.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -105,10 +107,14 @@ export class StartathonLinkPayment extends OpenAPIRoute {
         );
       }
 
+      const expectedAmount = team.referred_by
+        ? STARTATHON_TEAM_REFERRAL_FEE
+        : STARTATHON_TEAM_FEE;
+
       const transaction = await c.env.EVENTS_DB.prepare(
-        "SELECT * FROM startathon_transactions WHERE ref = ? AND status = 'unused'",
+        "SELECT * FROM startathon_transactions WHERE ref = ? AND status = 'unused' AND amount = ?",
       )
-        .bind(transaction_id)
+        .bind(transaction_id, expectedAmount)
         .first();
 
       if (!transaction) {
