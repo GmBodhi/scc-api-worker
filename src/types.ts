@@ -688,6 +688,10 @@ export const GoogleOAuthCallbackResponse = z.object({
 // Startathon (standalone module — startathon.sctcoding.club)
 // ============================================================
 
+// Team fee: ₹100 flat, or ₹90 if the team applied a valid referral code.
+export const STARTATHON_TEAM_FEE = 100;
+export const STARTATHON_TEAM_REFERRAL_FEE = 90;
+
 export const StartathonParticipant = z.object({
   user_id: z.string(),
   name: z.string(),

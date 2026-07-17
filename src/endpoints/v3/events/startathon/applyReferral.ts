@@ -4,6 +4,7 @@ import {
   StartathonReferralRequest,
   StartathonReferralResponse,
   ErrorResponse,
+  STARTATHON_TEAM_REFERRAL_FEE,
 } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
 
@@ -141,7 +142,7 @@ export class StartathonApplyReferral extends OpenAPIRoute {
         success: true,
         data: {
           referred_by: referrer.team_id as string,
-          expected_fee: 90,
+          expected_fee: STARTATHON_TEAM_REFERRAL_FEE,
         },
       });
     } catch (error) {
