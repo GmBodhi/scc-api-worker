@@ -105,10 +105,12 @@ export class StartathonLinkPayment extends OpenAPIRoute {
         );
       }
 
+      const expectedAmount = team.referred_by ? 90 : 100;
+
       const transaction = await c.env.EVENTS_DB.prepare(
-        "SELECT * FROM startathon_transactions WHERE ref = ? AND status = 'unused'",
+        "SELECT * FROM startathon_transactions WHERE ref = ? AND status = 'unused' AND amount = ?",
       )
-        .bind(transaction_id)
+        .bind(transaction_id, expectedAmount)
         .first();
 
       if (!transaction) {
