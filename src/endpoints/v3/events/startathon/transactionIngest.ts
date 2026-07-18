@@ -47,8 +47,7 @@ export class StartathonTransactionIngest extends OpenAPIRoute {
 
     if (
       !extracted ||
-      (extracted.amount !== STARTATHON_TEAM_FEE &&
-        extracted.amount !== STARTATHON_TEAM_REFERRAL_FEE)
+      (![1, 90, 100].includes(extracted.amount))
     ) {
       c.status(400);
       return c.json({ error: "Invalid transaction data" });

@@ -78,7 +78,7 @@ export class EmailService {
     return this.sendEmail({
       to: studentEmail,
       toName: studentName,
-      subject: "🎉 Registration Confirmed - Mentorship Program 2025",
+      subject: " Registration Confirmed - Mentorship Program 2025",
       html,
     });
   }
@@ -185,7 +185,7 @@ export class EmailService {
     return this.sendEmail({
       to: email,
       toName: email.split("@")[0],
-      subject: `🚀 You're invited to join "${teamName}" on Startathon`,
+      subject: `You're invited to join "${teamName}" on Startathon`,
       html,
     });
   }
@@ -205,7 +205,7 @@ export class EmailService {
     return this.sendEmail({
       to: email,
       toName: name,
-      subject: `🚀 You're invited to join "${teamName}" on Startathon`,
+      subject: `You're invited to join "${teamName}" on Startathon`,
       html,
     });
   }
@@ -220,7 +220,7 @@ export class EmailService {
     return this.sendEmail({
       to: email,
       toName: name,
-      subject: "🔐 Reset your Startathon password",
+      subject: "Reset your Startathon password",
       html,
     });
   }
@@ -242,7 +242,7 @@ export class EmailService {
     return this.sendEmail({
       to: email,
       toName: name,
-      subject: "🎉 Startathon payment confirmed!",
+      subject: "Startathon payment confirmed!",
       html,
     });
   }

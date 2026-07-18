@@ -24,7 +24,7 @@ export function getStartathonPaymentConfirmationEmail(
           <tr>
             <td style="padding:32px 36px;">
               <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#ffffff;">Startathon<span style="color:#888888;">.</span></p>
-              <h1 style="margin:20px 0 12px;font-size:22px;color:#ffffff;">Payment confirmed &#127881;</h1>
+              <h1 style="margin:20px 0 12px;font-size:22px;color:#ffffff;">Payment confirmed</h1>
               <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#bbbbbb;">
                 Hi ${name}, payment for your team <strong style="color:#ffffff;">${teamName}</strong> is confirmed. You're all set for Startathon.
               </p>
