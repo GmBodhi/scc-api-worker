@@ -171,14 +171,12 @@ export class EmailService {
   }
 
   async sendStartathonAccountSetupInviteEmail(
-    name: string,
     email: string,
     teamName: string,
     invitedByName: string,
     resetToken: string,
   ): Promise<boolean> {
     const html = getStartathonAccountSetupInviteEmail({
-      name,
       teamName,
       invitedByName,
       resetToken,
@@ -186,7 +184,7 @@ export class EmailService {
 
     return this.sendEmail({
       to: email,
-      toName: name,
+      toName: email.split("@")[0],
       subject: `🚀 You're invited to join "${teamName}" on Startathon`,
       html,
     });

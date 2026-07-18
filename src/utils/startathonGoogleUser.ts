@@ -30,9 +30,15 @@ export async function findOrCreateStartathonGoogleUser(
 
     if (user) {
       await db
-        .prepare("UPDATE startathon_users SET google_id = ? WHERE user_id = ?")
-        .bind(profile.googleId, user.user_id)
+        .prepare(
+          "UPDATE startathon_users SET google_id = ?, name = COALESCE(name, ?) WHERE user_id = ?",
+        )
+        .bind(profile.googleId, profile.name, user.user_id)
         .run();
+      user = await db
+        .prepare("SELECT * FROM startathon_users WHERE user_id = ?")
+        .bind(user.user_id)
+        .first();
     }
   }
 

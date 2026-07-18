@@ -1,6 +1,7 @@
 import { OpenAPIRoute } from "chanfana";
 import { type AppContext, ErrorResponse } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * POST /api/v3/events/startathon/team/leave
@@ -89,8 +90,6 @@ export class StartathonLeaveTeam extends OpenAPIRoute {
         );
       }
 
-      const now = Math.floor(Date.now() / 1000);
-
       if (user.role === "member") {
         await c.env.EVENTS_DB.prepare(
           "UPDATE startathon_users SET team_id = NULL, role = NULL WHERE user_id = ?",
@@ -106,14 +105,22 @@ export class StartathonLeaveTeam extends OpenAPIRoute {
         return c.json({ success: true, message: "You've left the team." });
       }
 
-      // Leader: delete the team entirely, free every member, cancel invites.
+      // Leader: delete the team entirely, free every member, drop invites.
+      // Every startathon_invites row for this team (any status) still
+      // FK-references team_id, and any team that applied this team's
+      // referral_code still FK-references it via referred_by — both must
+      // be cleared before the DELETE or it fails with a FOREIGN KEY
+      // constraint error.
       await c.env.EVENTS_DB.batch([
         c.env.EVENTS_DB.prepare(
           "UPDATE startathon_users SET team_id = NULL, role = NULL WHERE team_id = ?",
         ).bind(user.team_id),
         c.env.EVENTS_DB.prepare(
-          "UPDATE startathon_invites SET status = 'cancelled', responded_at = ? WHERE team_id = ? AND status = 'pending'",
-        ).bind(now, user.team_id),
+          "DELETE FROM startathon_invites WHERE team_id = ?",
+        ).bind(user.team_id),
+        c.env.EVENTS_DB.prepare(
+          "UPDATE startathon_teams SET referred_by = NULL WHERE referred_by = ?",
+        ).bind(user.team_id),
         c.env.EVENTS_DB.prepare(
           "DELETE FROM startathon_teams WHERE team_id = ?",
         ).bind(user.team_id),
@@ -129,8 +136,7 @@ export class StartathonLeaveTeam extends OpenAPIRoute {
         message: "Team deleted. All members have been freed.",
       });
     } catch (error) {
-      console.error("Startathon leave team error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon leave team error:");
     }
   }
 }

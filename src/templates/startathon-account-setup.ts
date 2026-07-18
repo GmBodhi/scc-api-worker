@@ -1,7 +1,6 @@
 const CLIENT_URL = "https://startathon.sctcoding.club";
 
 interface StartathonAccountSetupInviteData {
-  name: string;
   teamName: string;
   invitedByName: string;
   resetToken: string;
@@ -10,7 +9,7 @@ interface StartathonAccountSetupInviteData {
 export function getStartathonAccountSetupInviteEmail(
   data: StartathonAccountSetupInviteData,
 ): string {
-  const { name, teamName, invitedByName, resetToken } = data;
+  const { teamName, invitedByName, resetToken } = data;
   const setupUrl = `${CLIENT_URL}/reset-password?token=${encodeURIComponent(resetToken)}`;
   return `<!DOCTYPE html>
 <html lang="en">
@@ -27,7 +26,7 @@ export function getStartathonAccountSetupInviteEmail(
           <tr>
             <td style="padding:32px 36px;">
               <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#ffffff;">Startathon<span style="color:#888888;">.</span></p>
-              <h1 style="margin:20px 0 12px;font-size:22px;color:#ffffff;">You're invited, ${name}!</h1>
+              <h1 style="margin:20px 0 12px;font-size:22px;color:#ffffff;">You're invited!</h1>
               <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#bbbbbb;">
                 <strong style="color:#ffffff;">${invitedByName}</strong> invited you to join team
                 <strong style="color:#ffffff;">${teamName}</strong> for Startathon.

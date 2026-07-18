@@ -5,6 +5,7 @@ import {
   ErrorResponse,
 } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 const TEAM_CAP = 4;
 
@@ -135,8 +136,7 @@ export class StartathonJoinTeam extends OpenAPIRoute {
         message: `Joined team "${team.team_name as string}".`,
       });
     } catch (error) {
-      console.error("Startathon join team error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon join team error:");
     }
   }
 }

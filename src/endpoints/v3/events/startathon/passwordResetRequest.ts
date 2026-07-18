@@ -5,6 +5,7 @@ import {
   ErrorResponse,
 } from "../../../../types";
 import { EmailService } from "../../../../services/emailService";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * POST /api/v3/events/startathon/auth/password/reset
@@ -83,8 +84,11 @@ export class StartathonPasswordResetRequest extends OpenAPIRoute {
           "If an account with that email exists, a password reset link has been sent.",
       });
     } catch (error) {
-      console.error("Startathon password reset request error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(
+        c,
+        error,
+        "Startathon password reset request error:",
+      );
     }
   }
 }

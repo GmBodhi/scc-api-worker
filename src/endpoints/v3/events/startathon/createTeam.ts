@@ -6,6 +6,7 @@ import {
   ErrorResponse,
 } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * POST /api/v3/events/startathon/team
@@ -127,8 +128,7 @@ export class StartathonCreateTeam extends OpenAPIRoute {
         201,
       );
     } catch (error) {
-      console.error("Startathon create team error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon create team error:");
     }
   }
 }

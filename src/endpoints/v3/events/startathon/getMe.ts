@@ -5,6 +5,7 @@ import {
   ErrorResponse,
 } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * GET /api/v3/events/startathon/me
@@ -63,11 +64,11 @@ export class StartathonGetMe extends OpenAPIRoute {
           email: user.email,
           phone: user.phone,
           college: user.college,
+          gender: user.gender,
         },
       });
     } catch (error) {
-      console.error("Startathon get me error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon get me error:");
     }
   }
 }

@@ -1,6 +1,7 @@
 import { OpenAPIRoute } from "chanfana";
 import { type AppContext, ErrorResponse } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 const TEAM_CAP = 4;
 
@@ -140,8 +141,7 @@ export class StartathonAcceptInvite extends OpenAPIRoute {
         message: "Invite accepted. You've joined the team.",
       });
     } catch (error) {
-      console.error("Startathon accept invite error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon accept invite error:");
     }
   }
 }

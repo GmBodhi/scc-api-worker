@@ -6,6 +6,7 @@ import {
 } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
 import { EmailService } from "../../../../services/emailService";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 const TEAM_CAP = 4;
 
@@ -34,7 +35,7 @@ export class StartathonInviteMember extends OpenAPIRoute {
         content: {},
       },
       "400": {
-        description: "Team full, or name missing for a new invitee",
+        description: "Team full",
         content: {
           "application/json": {
             schema: ErrorResponse,
@@ -109,7 +110,7 @@ export class StartathonInviteMember extends OpenAPIRoute {
       }
 
       const data = await this.getValidatedData<typeof this.schema>();
-      const { email, name } = data.body;
+      const { email } = data.body;
       const normalizedEmail = email.toLowerCase();
 
       const countResult = await c.env.EVENTS_DB.prepare(
@@ -131,12 +132,6 @@ export class StartathonInviteMember extends OpenAPIRoute {
       let isNewAccount = false;
 
       if (!invitee) {
-        if (!name) {
-          return c.json(
-            { success: false, error: "name required for new invitee" },
-            400,
-          );
-        }
         isNewAccount = true;
         const newUserId = `STU_${Date.now()}_${Math.random()
           .toString(36)
@@ -144,10 +139,10 @@ export class StartathonInviteMember extends OpenAPIRoute {
           .toUpperCase()}`;
 
         await c.env.EVENTS_DB.prepare(
-          `INSERT INTO startathon_users (user_id, name, email, created_at)
-           VALUES (?, ?, ?, ?)`,
+          `INSERT INTO startathon_users (user_id, email, created_at)
+           VALUES (?, ?, ?)`,
         )
-          .bind(newUserId, name, normalizedEmail, now)
+          .bind(newUserId, normalizedEmail, now)
           .run();
 
         invitee = await c.env.EVENTS_DB.prepare(
@@ -212,7 +207,6 @@ export class StartathonInviteMember extends OpenAPIRoute {
             .run();
 
           await emailService.sendStartathonAccountSetupInviteEmail(
-            invitee.name as string,
             invitee.email as string,
             teamName,
             user.name,
@@ -245,8 +239,7 @@ export class StartathonInviteMember extends OpenAPIRoute {
         201,
       );
     } catch (error) {
-      console.error("Startathon invite error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon invite error:");
     }
   }
 }

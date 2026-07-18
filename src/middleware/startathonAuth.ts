@@ -15,6 +15,7 @@ export interface StartathonAuthUser {
   email: string;
   phone: string | null;
   college: string | null;
+  gender: "male" | "female" | "other" | null;
 }
 
 export interface StartathonAuthResult {
@@ -41,7 +42,7 @@ export async function requireStartathonAuth(
   }
 
   const user = await c.env.EVENTS_DB.prepare(
-    "SELECT user_id, team_id, role, name, email, phone, college FROM startathon_users WHERE user_id = ?",
+    "SELECT user_id, team_id, role, name, email, phone, college, gender FROM startathon_users WHERE user_id = ?",
   )
     .bind(payload.sub)
     .first();
@@ -60,6 +61,7 @@ export async function requireStartathonAuth(
       email: user.email as string,
       phone: (user.phone as string) || null,
       college: (user.college as string) || null,
+      gender: (user.gender as "male" | "female" | "other") || null,
     },
   };
 }

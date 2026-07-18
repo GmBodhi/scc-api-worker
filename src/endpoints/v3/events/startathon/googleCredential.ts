@@ -8,6 +8,7 @@ import {
 } from "../../../../types";
 import { generateStartathonJWT } from "../../../../utils/startathonJwt";
 import { findOrCreateStartathonGoogleUser } from "../../../../utils/startathonGoogleUser";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 // Created once per isolate — jose caches the fetched key set internally.
 const GOOGLE_JWKS = createRemoteJWKSet(
@@ -131,14 +132,15 @@ export class StartathonGoogleCredential extends OpenAPIRoute {
             email: user.email as string,
             phone: (user.phone as string) || null,
             college: (user.college as string) || null,
+            gender: (user.gender as string) || null,
           },
         },
       });
     } catch (error) {
-      console.error("Startathon Google credential error:", error);
-      return c.json(
-        { success: false, error: "Failed to process Google credential" },
-        500,
+      return handleEndpointError(
+        c,
+        error,
+        "Startathon Google credential error:",
       );
     }
   }

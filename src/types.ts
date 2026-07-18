@@ -722,6 +722,7 @@ export const StartathonAuthResponse = z.object({
         email: z.string(),
         phone: z.string().nullable(),
         college: z.string().nullable(),
+        gender: z.enum(["male", "female", "other"]).nullable(),
       }),
     })
     .optional(),
@@ -735,6 +736,14 @@ export const StartathonPasswordResetRequestSchema = z.object({
 export const StartathonPasswordResetVerifySchema = z.object({
   token: z.string().min(1),
   new_password: z.string().min(8).max(100),
+  name: z.string().min(1).max(100).optional(),
+});
+
+export const StartathonTeamInvite = z.object({
+  invite_id: z.string(),
+  email: z.string(),
+  status: z.enum(["pending", "accepted", "declined", "cancelled"]),
+  created_at: z.number(),
 });
 
 export const StartathonTeamResponse = z.object({
@@ -749,6 +758,7 @@ export const StartathonTeamResponse = z.object({
       created_at: z.number(),
       your_role: z.enum(["leader", "member"]),
       members: z.array(StartathonParticipant),
+      invites: z.array(StartathonTeamInvite),
       referral_code: z.string(),
       referred_by: z.string().nullable(),
       expected_fee: z.number(),
@@ -769,6 +779,7 @@ export const StartathonMeResponse = z.object({
       email: z.string(),
       phone: z.string().nullable(),
       college: z.string().nullable(),
+      gender: z.enum(["male", "female", "other"]).nullable(),
     })
     .optional(),
   error: z.string().optional(),
@@ -778,6 +789,7 @@ export const StartathonUpdateMeRequest = z.object({
   name: z.string().min(1).max(100).optional(),
   phone: z.string().min(10).max(15).optional(),
   college: z.string().min(1).max(150).optional(),
+  gender: z.enum(["male", "female", "other"]).optional(),
 });
 
 export const StartathonPaymentRequest = z.object({
@@ -790,6 +802,7 @@ export const StartathonSignupRequest = z.object({
   password: z.string().min(8).max(100),
   phone: z.string().min(10).max(15),
   college: z.string().min(1).max(150),
+  gender: z.enum(["male", "female", "other"]),
 });
 
 export const StartathonCreateTeamRequest = z.object({
@@ -827,7 +840,6 @@ export const StartathonReferralResponse = z.object({
 
 export const StartathonInviteRequest = z.object({
   email: z.string().email(),
-  name: z.string().min(1).max(100).optional(),
 });
 
 export const StartathonJoinTeamRequest = z.object({

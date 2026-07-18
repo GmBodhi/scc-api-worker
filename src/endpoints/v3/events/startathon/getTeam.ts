@@ -7,6 +7,7 @@ import {
   STARTATHON_TEAM_REFERRAL_FEE,
 } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * GET /api/v3/events/startathon/team
@@ -87,6 +88,12 @@ export class StartathonGetTeam extends OpenAPIRoute {
         .bind(user.team_id)
         .all();
 
+      const invites = await c.env.EVENTS_DB.prepare(
+        "SELECT invite_id, invited_email, status, created_at FROM startathon_invites WHERE team_id = ? AND status = 'pending' ORDER BY created_at DESC",
+      )
+        .bind(user.team_id)
+        .all();
+
       let referralCount: number | null = null;
       if (user.role === "leader") {
         const countRow = await c.env.EVENTS_DB.prepare(
@@ -119,11 +126,16 @@ export class StartathonGetTeam extends OpenAPIRoute {
             email: m.email as string,
             role: m.role as string,
           })),
+          invites: invites.results.map((i) => ({
+            invite_id: i.invite_id as string,
+            email: i.invited_email as string,
+            status: i.status as string,
+            created_at: i.created_at as number,
+          })),
         },
       });
     } catch (error) {
-      console.error("Startathon get team error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon get team error:");
     }
   }
 }

@@ -6,6 +6,7 @@ import {
   ErrorResponse,
 } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * PATCH /api/v3/events/startathon/me
@@ -72,7 +73,7 @@ export class StartathonUpdateMe extends OpenAPIRoute {
       const user = authResult.user;
 
       const data = await this.getValidatedData<typeof this.schema>();
-      const { name, phone, college } = data.body;
+      const { name, phone, college, gender } = data.body;
 
       const updates: string[] = [];
       const bindings: unknown[] = [];
@@ -88,6 +89,10 @@ export class StartathonUpdateMe extends OpenAPIRoute {
       if (college !== undefined) {
         updates.push("college = ?");
         bindings.push(college);
+      }
+      if (gender !== undefined) {
+        updates.push("gender = ?");
+        bindings.push(gender);
       }
 
       if (updates.length === 0) {
@@ -115,11 +120,11 @@ export class StartathonUpdateMe extends OpenAPIRoute {
           email: user.email,
           phone: phone ?? user.phone,
           college: college ?? user.college,
+          gender: gender ?? user.gender,
         },
       });
     } catch (error) {
-      console.error("Startathon update me error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon update me error:");
     }
   }
 }

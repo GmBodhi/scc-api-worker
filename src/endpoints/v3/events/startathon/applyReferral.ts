@@ -7,6 +7,7 @@ import {
   STARTATHON_TEAM_REFERRAL_FEE,
 } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * PUT /api/v3/events/startathon/team/referral
@@ -146,8 +147,7 @@ export class StartathonApplyReferral extends OpenAPIRoute {
         },
       });
     } catch (error) {
-      console.error("Startathon apply referral error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon apply referral error:");
     }
   }
 }

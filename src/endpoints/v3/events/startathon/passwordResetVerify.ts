@@ -5,6 +5,7 @@ import {
   ErrorResponse,
 } from "../../../../types";
 import { hashPassword } from "../../../../utils/startathonJwt";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * POST /api/v3/events/startathon/auth/password/reset/verify
@@ -50,7 +51,7 @@ export class StartathonPasswordResetVerify extends OpenAPIRoute {
   async handle(c: AppContext) {
     try {
       const data = await this.getValidatedData<typeof this.schema>();
-      const { token, new_password } = data.body;
+      const { token, new_password, name } = data.body;
 
       const resetToken = await c.env.EVENTS_DB.prepare(
         "SELECT token, user_id, expires_at FROM startathon_reset_tokens WHERE token = ?",
@@ -74,8 +75,8 @@ export class StartathonPasswordResetVerify extends OpenAPIRoute {
 
       await c.env.EVENTS_DB.batch([
         c.env.EVENTS_DB.prepare(
-          "UPDATE startathon_users SET password_hash = ? WHERE user_id = ?",
-        ).bind(passwordHash, resetToken.user_id),
+          "UPDATE startathon_users SET password_hash = ?, name = COALESCE(?, name) WHERE user_id = ?",
+        ).bind(passwordHash, name || null, resetToken.user_id),
         c.env.EVENTS_DB.prepare(
           "DELETE FROM startathon_reset_tokens WHERE token = ?",
         ).bind(token),
@@ -91,8 +92,11 @@ export class StartathonPasswordResetVerify extends OpenAPIRoute {
         message: "Password set successfully. You can now log in.",
       });
     } catch (error) {
-      console.error("Startathon password reset verify error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(
+        c,
+        error,
+        "Startathon password reset verify error:",
+      );
     }
   }
 }

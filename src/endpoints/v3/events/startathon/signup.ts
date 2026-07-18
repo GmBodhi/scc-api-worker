@@ -9,6 +9,7 @@ import {
   generateStartathonJWT,
   hashPassword,
 } from "../../../../utils/startathonJwt";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * POST /api/v3/events/startathon/auth/signup
@@ -61,7 +62,7 @@ export class StartathonSignup extends OpenAPIRoute {
   async handle(c: AppContext) {
     try {
       const data = await this.getValidatedData<typeof this.schema>();
-      const { name, email, password, phone, college } = data.body;
+      const { name, email, password, phone, college, gender } = data.body;
       const normalizedEmail = email.toLowerCase();
 
       const existing = await c.env.EVENTS_DB.prepare(
@@ -85,10 +86,10 @@ export class StartathonSignup extends OpenAPIRoute {
       const now = Math.floor(Date.now() / 1000);
 
       await c.env.EVENTS_DB.prepare(
-        `INSERT INTO startathon_users (user_id, name, email, phone, college, password_hash, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO startathon_users (user_id, name, email, phone, college, gender, password_hash, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-        .bind(userId, name, normalizedEmail, phone, college, passwordHash, now)
+        .bind(userId, name, normalizedEmail, phone, college, gender, passwordHash, now)
         .run();
 
       const accessToken = await generateStartathonJWT(
@@ -114,14 +115,14 @@ export class StartathonSignup extends OpenAPIRoute {
               email: normalizedEmail,
               phone: phone || null,
               college: college || null,
+              gender,
             },
           },
         },
         201,
       );
     } catch (error) {
-      console.error("Startathon signup error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon signup error:");
     }
   }
 }

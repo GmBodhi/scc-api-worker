@@ -9,6 +9,7 @@ import {
   generateStartathonJWT,
   hashPassword,
 } from "../../../../utils/startathonJwt";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * POST /api/v3/events/startathon/auth/login
@@ -97,12 +98,12 @@ export class StartathonLogin extends OpenAPIRoute {
             email: user.email as string,
             phone: (user.phone as string) || null,
             college: (user.college as string) || null,
+            gender: (user.gender as string) || null,
           },
         },
       });
     } catch (error) {
-      console.error("Startathon login error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon login error:");
     }
   }
 }

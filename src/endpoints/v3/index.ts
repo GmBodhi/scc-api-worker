@@ -34,6 +34,7 @@ import { StartathonGetTeam } from "./events/startathon/getTeam";
 import { StartathonGetMe } from "./events/startathon/getMe";
 import { StartathonUpdateMe } from "./events/startathon/updateMe";
 import { StartathonInviteMember } from "./events/startathon/inviteMember";
+import { StartathonCancelInvite } from "./events/startathon/cancelInvite";
 import { StartathonListInvites } from "./events/startathon/listInvites";
 import { StartathonAcceptInvite } from "./events/startathon/acceptInvite";
 import { StartathonDeclineInvite } from "./events/startathon/declineInvite";
@@ -142,6 +143,10 @@ openapi.put("/events/startathon/team/referral", StartathonApplyReferral);
 openapi.get("/events/startathon/me", StartathonGetMe);
 openapi.patch("/events/startathon/me", StartathonUpdateMe);
 openapi.post("/events/startathon/team/invite", StartathonInviteMember);
+openapi.post(
+  "/events/startathon/team/invite/:id/cancel",
+  StartathonCancelInvite,
+);
 openapi.get("/events/startathon/invites", StartathonListInvites);
 openapi.post("/events/startathon/invites/:id/accept", StartathonAcceptInvite);
 openapi.post(

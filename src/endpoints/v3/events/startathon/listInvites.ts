@@ -5,6 +5,7 @@ import {
   ErrorResponse,
 } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * GET /api/v3/events/startathon/invites
@@ -76,8 +77,7 @@ export class StartathonListInvites extends OpenAPIRoute {
         },
       });
     } catch (error) {
-      console.error("Startathon list invites error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon list invites error:");
     }
   }
 }

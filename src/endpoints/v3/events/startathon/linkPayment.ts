@@ -8,6 +8,7 @@ import {
 } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
 import { EmailService } from "../../../../services/emailService";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * POST /api/v3/events/startathon/payment
@@ -185,8 +186,7 @@ export class StartathonLinkPayment extends OpenAPIRoute {
         message: "Payment linked. Team confirmed — see you at Startathon!",
       });
     } catch (error) {
-      console.error("Startathon link payment error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon link payment error:");
     }
   }
 }

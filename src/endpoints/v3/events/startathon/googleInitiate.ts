@@ -3,6 +3,7 @@ import {
   type AppContext,
   GoogleOAuthInitiateResponse,
 } from "../../../../types";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * GET /api/v3/events/startathon/auth/google
@@ -54,8 +55,11 @@ export class StartathonGoogleInitiate extends OpenAPIRoute {
         },
       });
     } catch (error) {
-      console.error("Startathon Google OAuth initiate error:", error);
-      return c.json({ success: false, error: "Failed to initiate OAuth" }, 500);
+      return handleEndpointError(
+        c,
+        error,
+        "Startathon Google OAuth initiate error:",
+      );
     }
   }
 }

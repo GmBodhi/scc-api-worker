@@ -1,6 +1,7 @@
 import { OpenAPIRoute } from "chanfana";
 import { type AppContext, ErrorResponse } from "../../../../types";
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
+import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * POST /api/v3/events/startathon/team/members/:user_id/kick
@@ -139,8 +140,7 @@ export class StartathonKickMember extends OpenAPIRoute {
 
       return c.json({ success: true, message: "Member removed from team." });
     } catch (error) {
-      console.error("Startathon kick member error:", error);
-      return c.json({ success: false, error: "Internal server error" }, 500);
+      return handleEndpointError(c, error, "Startathon kick member error:");
     }
   }
 }
