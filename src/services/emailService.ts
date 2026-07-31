@@ -12,6 +12,7 @@ import { getStartathonAccountSetupInviteEmail } from "../templates/startathon-ac
 import { getStartathonInviteReceivedEmail } from "../templates/startathon-invite-received";
 import { getStartathonPasswordResetEmail } from "../templates/startathon-password-reset";
 import { getStartathonPaymentConfirmationEmail } from "../templates/startathon-payment-confirmation";
+import { getStartathonRegistrationOpenEmail } from "../templates/startathon-registration-open";
 
 interface EmailOptions {
   to: string;
@@ -166,6 +167,21 @@ export class EmailService {
       to: email,
       toName: name,
       subject: "You're on the list. — Startathon 2026",
+      html,
+    });
+  }
+
+  async sendStartathonRegistrationOpenEmail(
+    name: string,
+    email: string,
+    waitlistId: string,
+  ): Promise<boolean> {
+    const html = getStartathonRegistrationOpenEmail({ name, waitlistId });
+
+    return this.sendEmail({
+      to: email,
+      toName: name,
+      subject: "Registrations are open. — Startathon 2026",
       html,
     });
   }

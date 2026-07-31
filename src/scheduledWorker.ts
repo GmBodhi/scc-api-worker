@@ -1,4 +1,5 @@
 import { EmailService } from "./services/emailService";
+import { notifyStartathonWaitlist } from "./services/startathonWaitlistNotifier";
 
 interface Student {
   id: string;
@@ -8,6 +9,18 @@ interface Student {
 }
 
 export async function handleScheduled(env: Env): Promise<void> {
+  // Each job is isolated: the follow-up check returns early in several places
+  // and either job throwing must not stop the other from running.
+  await handleFollowUpEmails(env);
+
+  try {
+    await notifyStartathonWaitlist(env);
+  } catch (error) {
+    console.error("Error in Startathon waitlist notifier:", error);
+  }
+}
+
+async function handleFollowUpEmails(env: Env): Promise<void> {
   console.log("Running scheduled follow-up email check...");
 
   try {

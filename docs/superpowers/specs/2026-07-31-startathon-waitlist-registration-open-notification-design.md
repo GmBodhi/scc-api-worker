@@ -1,7 +1,7 @@
 # Startathon: Waitlist "Registrations Are Open" Notification — Design
 
 **Date:** 2026-07-31
-**Status:** Draft — awaiting review
+**Status:** Implemented
 **Builds on:** `docs/superpowers/specs/2026-07-11-startathon-registration-design.md`
 
 ## Overview
@@ -162,12 +162,15 @@ Matches the voice of the existing `You're on the list. — Startathon 2026`. Sen
 
 ## Testing
 
-- **Template render** — call `getStartathonRegistrationOpenEmail()` with fixture data; assert the output contains the tracking pixel URL, the signup CTA with UTM params, and the escaped recipient name; assert every `href` is wrapped in `trackLink`.
-- **Conversion pass** — seed a `startathon_wl` row whose email differs only in case from a `startathon_users` row; assert it becomes `registered`. This is the regression test for the `LOWER()` trap.
-- **Batch limit** — seed 25 waitlisted rows; assert one tick sends exactly 10 and the remaining 15 stay `waitlisted`.
-- **Idempotency** — run three ticks over a 25-row fixture; assert every row is emailed exactly once and the third tick sends nothing.
-- **Failure path** — stub the send to return `false` twice; assert the row lands on `notify_failed` and the rest of the batch still sends.
-- **Steady state** — run a tick with nothing waitlisted; assert zero sends and no error.
+**This repository has no test framework** — no `vitest`/`jest` dependency, no `test` script, and `tsconfig.json` excludes a `tests/` directory that does not exist. Standing up test infrastructure is out of scope for this feature, so verification was done with throwaway scripts rather than committed tests.
+
+**Verified before merge:**
+
+- **Typecheck** — `tsc --noEmit` reports no errors in any file this feature touches. (The repo carries ~80 pre-existing errors elsewhere, chiefly `Env` properties and broken import paths in v1/v2 endpoints.)
+- **Template render** — rendered with a hostile fixture name (`"  Ravi <script>alert(1)</script> Kumar  "`). Confirmed: no raw `<script>` survives, the first-name extraction and `"there"` fallback both work, all four outbound `href`s are wrapped in `trackLink`, `mailto:` is left alone, the open pixel carries the right `waitlist_id`, and the CTA carries the UTM campaign tag. Output is 14.3 KB — comfortably under Gmail's ~102 KB clipping threshold.
+- **SQL** — both passes executed against real SQLite using this repo's actual `0013` and `0016` schemas. Confirmed the batch limit, `registered_at ASC` ordering, once-only delivery across three consecutive ticks, and the no-op steady state. Critically, a waitlist row stored as `MiXeD@X.com` against a `startathon_users` row stored as `mixed@x.com` is correctly marked `registered` and never emailed — the regression case for the `LOWER()` trap.
+
+**Not covered by automated verification** (would need a test framework and a Brevo stub): the send-failure path landing a row on `notify_failed` while the rest of the batch continues, and the inline retry firing exactly once.
 
 ## Out of Scope
 
