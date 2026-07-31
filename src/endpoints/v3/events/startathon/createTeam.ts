@@ -104,9 +104,13 @@ export class StartathonCreateTeam extends OpenAPIRoute {
 
       await c.env.EVENTS_DB.batch([
         c.env.EVENTS_DB.prepare(
-          `INSERT INTO startathon_teams (team_id, team_name, leader_id, join_code, referral_code, status, created_at)
-           VALUES (?, ?, ?, ?, ?, 'payment-pending', ?)`,
-        ).bind(teamId, team_name, user.user_id, joinCode, referralCode, now),
+          `INSERT INTO startathon_teams
+             (team_id, team_name, leader_id, join_code, referral_code, status,
+              utm_source, utm_medium, utm_campaign, utm_term, utm_content, created_at)
+           SELECT ?, ?, ?, ?, ?, 'payment-pending',
+                  utm_source, utm_medium, utm_campaign, utm_term, utm_content, ?
+           FROM startathon_users WHERE user_id = ?`,
+        ).bind(teamId, team_name, user.user_id, joinCode, referralCode, now, user.user_id),
         c.env.EVENTS_DB.prepare(
           "UPDATE startathon_users SET team_id = ?, role = 'leader' WHERE user_id = ?",
         ).bind(teamId, user.user_id),

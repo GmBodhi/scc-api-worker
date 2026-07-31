@@ -10,9 +10,18 @@ export interface StartathonGoogleProfile {
   name: string;
 }
 
+export interface StartathonUtmData {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+}
+
 export async function findOrCreateStartathonGoogleUser(
   db: D1Database,
   profile: StartathonGoogleProfile,
+  utm?: StartathonUtmData,
 ) {
   const normalizedEmail = profile.email.toLowerCase();
 
@@ -52,10 +61,21 @@ export async function findOrCreateStartathonGoogleUser(
 
     await db
       .prepare(
-        `INSERT INTO startathon_users (user_id, name, email, google_id, created_at)
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO startathon_users (user_id, name, email, google_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .bind(userId, profile.name, normalizedEmail, profile.googleId, now)
+      .bind(
+        userId,
+        profile.name,
+        normalizedEmail,
+        profile.googleId,
+        utm?.utm_source || null,
+        utm?.utm_medium || null,
+        utm?.utm_campaign || null,
+        utm?.utm_term || null,
+        utm?.utm_content || null,
+        now,
+      )
       .run();
 
     user = await db

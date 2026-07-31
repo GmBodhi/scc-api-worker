@@ -62,7 +62,19 @@ export class StartathonSignup extends OpenAPIRoute {
   async handle(c: AppContext) {
     try {
       const data = await this.getValidatedData<typeof this.schema>();
-      const { name, email, password, phone, college, gender } = data.body;
+      const {
+        name,
+        email,
+        password,
+        phone,
+        college,
+        gender,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_term,
+        utm_content,
+      } = data.body;
       const normalizedEmail = email.toLowerCase();
 
       const existing = await c.env.EVENTS_DB.prepare(
@@ -86,10 +98,24 @@ export class StartathonSignup extends OpenAPIRoute {
       const now = Math.floor(Date.now() / 1000);
 
       await c.env.EVENTS_DB.prepare(
-        `INSERT INTO startathon_users (user_id, name, email, phone, college, gender, password_hash, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO startathon_users (user_id, name, email, phone, college, gender, password_hash, utm_source, utm_medium, utm_campaign, utm_term, utm_content, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-        .bind(userId, name, normalizedEmail, phone, college, gender, passwordHash, now)
+        .bind(
+          userId,
+          name,
+          normalizedEmail,
+          phone,
+          college,
+          gender,
+          passwordHash,
+          utm_source || null,
+          utm_medium || null,
+          utm_campaign || null,
+          utm_term || null,
+          utm_content || null,
+          now,
+        )
         .run();
 
       const accessToken = await generateStartathonJWT(

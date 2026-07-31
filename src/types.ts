@@ -704,8 +704,17 @@ export const StartathonLoginRequest = z.object({
   password: z.string().min(1),
 });
 
+const startathonUtmFields = {
+  utm_source: z.string().max(100).optional(),
+  utm_medium: z.string().max(100).optional(),
+  utm_campaign: z.string().max(100).optional(),
+  utm_term: z.string().max(100).optional(),
+  utm_content: z.string().max(100).optional(),
+};
+
 export const StartathonGoogleCredentialRequest = z.object({
   credential: z.string().min(1, "Google credential is required"),
+  ...startathonUtmFields,
 });
 
 export const StartathonAuthResponse = z.object({
@@ -803,6 +812,7 @@ export const StartathonSignupRequest = z.object({
   phone: z.string().min(10).max(15),
   college: z.string().min(1).max(150),
   gender: z.enum(["male", "female", "other"]),
+  ...startathonUtmFields,
 });
 
 export const StartathonCreateTeamRequest = z.object({

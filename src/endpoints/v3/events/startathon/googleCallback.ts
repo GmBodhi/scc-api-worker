@@ -47,7 +47,16 @@ export class StartathonGoogleCallback extends OpenAPIRoute {
 
   async handle(c: AppContext) {
     try {
-      const { code, state } = c.req.query();
+      const {
+        code,
+        state,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_term,
+        utm_content,
+      } = c.req.query();
+      const cap = (v: string | undefined) => v?.slice(0, 100);
 
       if (!code || !state) {
         return c.json(
@@ -111,11 +120,21 @@ export class StartathonGoogleCallback extends OpenAPIRoute {
 
       const googleUser = await userInfoResponse.json<GoogleUserInfo>();
 
-      const user = await findOrCreateStartathonGoogleUser(c.env.EVENTS_DB, {
-        googleId: googleUser.id,
-        email: googleUser.email,
-        name: googleUser.name,
-      });
+      const user = await findOrCreateStartathonGoogleUser(
+        c.env.EVENTS_DB,
+        {
+          googleId: googleUser.id,
+          email: googleUser.email,
+          name: googleUser.name,
+        },
+        {
+          utm_source: cap(utm_source),
+          utm_medium: cap(utm_medium),
+          utm_campaign: cap(utm_campaign),
+          utm_term: cap(utm_term),
+          utm_content: cap(utm_content),
+        },
+      );
 
       if (!user) {
         return c.json(

@@ -64,7 +64,14 @@ export class StartathonGoogleCredential extends OpenAPIRoute {
   async handle(c: AppContext) {
     try {
       const data = await this.getValidatedData<typeof this.schema>();
-      const { credential } = data.body;
+      const {
+        credential,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_term,
+        utm_content,
+      } = data.body;
 
       const { GOOGLE_CLIENT_ID } = c.env;
       if (!GOOGLE_CLIENT_ID) {
@@ -99,11 +106,15 @@ export class StartathonGoogleCredential extends OpenAPIRoute {
         );
       }
 
-      const user = await findOrCreateStartathonGoogleUser(c.env.EVENTS_DB, {
-        googleId: payload.sub,
-        email: payload.email,
-        name: payload.name ?? payload.email,
-      });
+      const user = await findOrCreateStartathonGoogleUser(
+        c.env.EVENTS_DB,
+        {
+          googleId: payload.sub,
+          email: payload.email,
+          name: payload.name ?? payload.email,
+        },
+        { utm_source, utm_medium, utm_campaign, utm_term, utm_content },
+      );
 
       if (!user) {
         return c.json(
