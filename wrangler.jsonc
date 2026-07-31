@@ -5,6 +5,9 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "api",
+	// Pinned because this login can see several accounts; without it wrangler
+	// fails in non-interactive contexts (CI, scripts) rather than guessing.
+	"account_id": "81c188cfe627bfee7048e715cf44e108",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-09-04",
 	"routes": [
