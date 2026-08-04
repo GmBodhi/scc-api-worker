@@ -46,6 +46,11 @@ import { StartathonGoogleCallback } from "./events/startathon/googleCallback";
 import { StartathonGoogleCredential } from "./events/startathon/googleCredential";
 import { StartathonLeaveTeam } from "./events/startathon/leaveTeam";
 import { StartathonKickMember } from "./events/startathon/kickMember";
+import { StartathonPutApplication } from "./events/startathon/putApplication";
+import { StartathonGetApplication } from "./events/startathon/getApplication";
+import { StartathonPutApplicationMember } from "./events/startathon/putApplicationMember";
+import { StartathonVerifyDriveLink } from "./events/startathon/verifyDriveLink";
+import { StartathonVerifyYoutubeLink } from "./events/startathon/verifyYoutubeLink";
 import { EmailOpen } from "./events/emailOpen";
 import { EmailClick } from "./events/emailClick";
 // Notifications
@@ -169,6 +174,20 @@ openapi.post("/events/startathon/team/leave", StartathonLeaveTeam);
 openapi.post(
   "/events/startathon/team/members/:user_id/kick",
   StartathonKickMember,
+);
+openapi.put("/events/startathon/team/application", StartathonPutApplication);
+openapi.get("/events/startathon/team/application", StartathonGetApplication);
+openapi.put(
+  "/events/startathon/team/application/members/:user_id",
+  StartathonPutApplicationMember,
+);
+openapi.post(
+  "/events/startathon/links/verify/drive",
+  StartathonVerifyDriveLink,
+);
+openapi.post(
+  "/events/startathon/links/verify/youtube",
+  StartathonVerifyYoutubeLink,
 );
 openapi.get("/events/email/open", EmailOpen);
 openapi.get("/events/email/click", EmailClick);

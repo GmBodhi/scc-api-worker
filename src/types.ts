@@ -872,3 +872,130 @@ export const StartathonInvitesResponse = z.object({
     .optional(),
   error: z.string().optional(),
 });
+
+// Startathon application (pre-event shortlisting). The deck and video
+// carry the pitch itself; these fields are the metadata around them.
+export const StartathonPriorWorkEntry = z.object({
+  kind: z.enum([
+    "repository",
+    "prototype",
+    "prior_version",
+    "prior_competition",
+    "design_file",
+    "dataset_or_model",
+    "reusable_component",
+    "hosted_app",
+    // Escape hatch — anything that doesn't fit the named categories. The
+    // required description carries the detail, so an "other" entry is
+    // still a real declaration rather than an empty box ticked.
+    "other",
+  ]),
+  url: z.string().url().optional(),
+  description: z.string().min(1).max(500),
+});
+
+export const StartathonApplicationRequest = z.object({
+  title: z.string().min(3).max(100),
+  summary: z.string().min(10).max(300),
+  problem_evidence: z.string().min(10).max(1000),
+  deck_url: z.string().url(),
+  video_url: z.string().url(),
+  prior_work: z.array(StartathonPriorWorkEntry).max(20).optional(),
+});
+
+// Every field optional — a member who fills in nothing simply has no row.
+export const StartathonApplicationMemberRequest = z.object({
+  about: z.string().max(1000).optional(),
+  resume_url: z.string().url().optional(),
+  github: z.string().url().optional(),
+  linkedin: z.string().url().optional(),
+  project_links: z.array(z.string().url()).max(5).optional(),
+});
+
+export const StartathonApplicationMember = z.object({
+  user_id: z.string(),
+  name: z.string(),
+  role: z.enum(["leader", "member"]),
+  about: z.string().nullable(),
+  resume_url: z.string().nullable(),
+  github: z.string().nullable(),
+  linkedin: z.string().nullable(),
+  project_links: z.array(z.string()).nullable(),
+  // null when this member has filled nothing in — the full team roster is
+  // always returned so judges can see who didn't.
+  updated_at: z.number().nullable(),
+});
+
+export const StartathonApplicationMemberResponse = z.object({
+  success: z.boolean(),
+  data: StartathonApplicationMember.optional(),
+  error: z.string().optional(),
+});
+
+// Advisory link checks. Both always answer 200 when the check itself ran —
+// "this link isn't shared" is a result, not a request failure.
+export const StartathonLinkCheckRequest = z.object({
+  url: z.string().url(),
+});
+
+export const StartathonDriveLinkCheckResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      ok: z.boolean(),
+      reason: z.enum([
+        "ok",
+        "unrecognized_url",
+        "not_shared",
+        "upstream_error",
+      ]),
+      message: z.string(),
+      file_id: z.string().nullable(),
+      name: z.string().nullable(),
+      mime_type: z.string().nullable(),
+      is_folder: z.boolean().nullable(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const StartathonYoutubeLinkCheckResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      ok: z.boolean(),
+      reason: z.enum([
+        "ok",
+        "unrecognized_url",
+        "private_or_removed",
+        "upstream_error",
+      ]),
+      message: z.string(),
+      video_id: z.string().nullable(),
+      title: z.string().nullable(),
+      author_name: z.string().nullable(),
+      thumbnail_url: z.string().nullable(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const StartathonApplicationResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      team_id: z.string(),
+      title: z.string(),
+      summary: z.string(),
+      problem_evidence: z.string(),
+      deck_url: z.string(),
+      video_url: z.string(),
+      // null = never answered, [] = explicitly declared nothing.
+      prior_work: z.array(StartathonPriorWorkEntry).nullable(),
+      members: z.array(StartathonApplicationMember),
+      created_at: z.number(),
+      updated_at: z.number().nullable(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});

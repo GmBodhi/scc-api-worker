@@ -14,6 +14,10 @@ declare namespace Cloudflare {
 		GOOGLE_CLIENT_ID: string;
 		GOOGLE_CLIENT_SECRET: string;
 		GOOGLE_REDIRECT_URI_STARTATHON: string;
+		STARTATHON_APPLICATION_CLOSES_AT: string;
+		GOOGLE_SERVICE_ACCOUNT_EMAIL: string;
+		GOOGLE_PRIVATE_KEY: string;
+		GOOGLE_SHEETS_ID: string;
 		PROFILE_PHOTOS: R2Bucket;
 		EVENTS_DB: D1Database;
 		GENERAL_DB: D1Database;

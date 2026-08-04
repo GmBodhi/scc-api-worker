@@ -56,6 +56,28 @@ Self-contained account/team/payment system. Own tables (`startathon_teams`, `sta
 - `POST /api/v3/events/startathon/invites/:id/accept` + `/decline` - Respond to an invite
 - `POST /api/v3/events/startathon/transaction` - Webhook ingest (₹100 fee, TOKEN-guarded)
 - `POST /api/v3/events/startathon/payment` - Leader links UPI ref, team → confirmed
+- `PUT /api/v3/events/startathon/team/application` - Leader submits/edits the shortlisting application (full replace)
+- `GET /api/v3/events/startathon/team/application` - Application plus the full member roster
+- `PUT /api/v3/events/startathon/team/application/members/:user_id` - A member's own details; leader may write any member
+- `POST /api/v3/events/startathon/links/verify/drive` - Is a Drive link readable by an outsider?
+- `POST /api/v3/events/startathon/links/verify/youtube` - Is a YouTube link playable?
+
+Both link checks are **advisory** — auth-guarded, nothing stored, no other
+endpoint consults them, and `PUT /team/application` does not call them. They
+answer 200 whenever the check itself ran; `data.ok` carries the verdict and
+`data.reason` the cause. Drive works by asking the service account (an
+unrelated identity, so a stand-in for a judge) to read the file — a 404 back
+from Google means not shared. Requires the **Drive API to be enabled** on the
+Cloud project, in addition to Sheets. YouTube uses oEmbed, needs no API key,
+and cannot distinguish public from unlisted — both are playable, both pass.
+
+The application is the pre-event shortlisting submission (20 teams advance).
+The 5-slide deck and 60s video are the real pitch and are held as URLs, so
+the row stores only what must be queryable plus `problem_evidence` and the
+`prior_work` declaration. Architecture and tech stack are deliberately not
+collected at this stage. Writes to both endpoints close at
+`STARTATHON_APPLICATION_CLOSES_AT` (a `wrangler.jsonc` var, so the date moves
+without a code deploy); an unset or unparseable value fails closed with a 500.
 
 ### Scheduled Jobs
 
