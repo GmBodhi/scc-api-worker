@@ -1,3 +1,44 @@
+export interface TeamStatusBlock {
+  status: 409 | 500;
+  error: string;
+}
+
+/**
+ * Gates application writes on the team having paid. Returns null when
+ * the team is confirmed, or the error response to send.
+ *
+ * Teams start at 'payment-pending' (createTeam) and move to 'confirmed'
+ * once the leader links a UPI reference (linkPayment). Reads are not
+ * gated — only writes.
+ *
+ * 409 rather than 403 to match how the module already reports actions
+ * blocked by team status (see kickMember): the caller is permitted, the
+ * team is just in the wrong state.
+ */
+export async function unconfirmedTeamBlock(
+  db: D1Database,
+  teamId: string,
+): Promise<TeamStatusBlock | null> {
+  const team = await db
+    .prepare("SELECT status FROM startathon_teams WHERE team_id = ?")
+    .bind(teamId)
+    .first();
+
+  if (!team) {
+    return { status: 500, error: "Team not found" };
+  }
+
+  if (team.status !== "confirmed") {
+    return {
+      status: 409,
+      error:
+        "Your team isn't confirmed yet. Complete the team payment before submitting.",
+    };
+  }
+
+  return null;
+}
+
 export interface StartathonApplicationMemberView {
   user_id: string;
   name: string;

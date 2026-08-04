@@ -11,6 +11,7 @@ import { applicationWindowBlock } from "../../../../utils/startathonApplicationW
 import {
   APPLICATION_MEMBERS_QUERY,
   mapApplicationMemberRow,
+  unconfirmedTeamBlock,
 } from "../../../../utils/startathonApplication";
 
 /**
@@ -85,6 +86,14 @@ export class StartathonPutApplication extends OpenAPIRoute {
           },
         },
       },
+      "409": {
+        description: "Team payment is still pending",
+        content: {
+          "application/json": {
+            schema: ErrorResponse,
+          },
+        },
+      },
       "500": {
         description: "Internal server error",
         content: {
@@ -125,6 +134,18 @@ export class StartathonPutApplication extends OpenAPIRoute {
       );
       if (closed) {
         return c.json({ success: false, error: closed.error }, closed.status);
+      }
+
+      // Checked after the deadline so a closed window costs no query.
+      const unconfirmed = await unconfirmedTeamBlock(
+        c.env.EVENTS_DB,
+        user.team_id,
+      );
+      if (unconfirmed) {
+        return c.json(
+          { success: false, error: unconfirmed.error },
+          unconfirmed.status,
+        );
       }
 
       const data = await this.getValidatedData<typeof this.schema>();

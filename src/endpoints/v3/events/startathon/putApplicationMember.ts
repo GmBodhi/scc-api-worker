@@ -8,7 +8,10 @@ import {
 import { requireStartathonAuth } from "../../../../middleware/startathonAuth";
 import { handleEndpointError } from "../../../../utils/errorResponse";
 import { applicationWindowBlock } from "../../../../utils/startathonApplicationWindow";
-import { mapApplicationMemberRow } from "../../../../utils/startathonApplication";
+import {
+  mapApplicationMemberRow,
+  unconfirmedTeamBlock,
+} from "../../../../utils/startathonApplication";
 
 /**
  * PUT /api/v3/events/startathon/team/application/members/:user_id
@@ -86,6 +89,14 @@ export class StartathonPutApplicationMember extends OpenAPIRoute {
           },
         },
       },
+      "409": {
+        description: "Team payment is still pending",
+        content: {
+          "application/json": {
+            schema: ErrorResponse,
+          },
+        },
+      },
       "500": {
         description: "Internal server error",
         content: {
@@ -128,6 +139,17 @@ export class StartathonPutApplicationMember extends OpenAPIRoute {
       );
       if (closed) {
         return c.json({ success: false, error: closed.error }, closed.status);
+      }
+
+      const unconfirmed = await unconfirmedTeamBlock(
+        c.env.EVENTS_DB,
+        user.team_id,
+      );
+      if (unconfirmed) {
+        return c.json(
+          { success: false, error: unconfirmed.error },
+          unconfirmed.status,
+        );
       }
 
       // The FK guarantees the user exists, not that they're on this team —
