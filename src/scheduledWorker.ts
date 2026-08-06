@@ -1,4 +1,5 @@
 import { EmailService } from "./services/emailService";
+import { notifyStartathonAnnouncements } from "./services/startathonAnnouncementNotifier";
 import { notifyStartathonWaitlist } from "./services/startathonWaitlistNotifier";
 
 interface Student {
@@ -17,6 +18,12 @@ export async function handleScheduled(env: Env): Promise<void> {
     await notifyStartathonWaitlist(env);
   } catch (error) {
     console.error("Error in Startathon waitlist notifier:", error);
+  }
+
+  try {
+    await notifyStartathonAnnouncements(env);
+  } catch (error) {
+    console.error("Error in Startathon announcement notifier:", error);
   }
 }
 

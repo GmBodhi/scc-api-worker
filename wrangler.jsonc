@@ -70,8 +70,10 @@
 		"GOOGLE_REDIRECT_URI_STARTATHON": "https://startathon.sctcoding.club/auth/google/callback",
 		// Startathon application deadline. Lives here rather than in source
 		// so it can move without a code deploy. Explicit IST offset so the
-		// wall-clock time is unambiguous. PLACEHOLDER — set the real date.
-		"STARTATHON_APPLICATION_CLOSES_AT": "2026-09-01T23:59:59+05:30",
+		// wall-clock time is unambiguous. Mirrors APPLICATIONS_CLOSE in the
+		// client's src/lib/phase.js, which drives the countdown — if the two
+		// disagree the server wins, so move this one first.
+		"STARTATHON_APPLICATION_CLOSES_AT": "2026-08-12T23:59:59+05:30",
 	},
 	"triggers": {
 		"crons": [

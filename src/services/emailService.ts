@@ -186,6 +186,26 @@ export class EmailService {
     });
   }
 
+  /**
+   * Sends a pre-rendered Startathon announcement. Unlike the other methods
+   * here, subject and body come from the caller: announcements live in
+   * src/announcements/ and each one owns its own copy, so this stays a thin
+   * pass-through rather than growing a method per blast.
+   */
+  async sendStartathonAnnouncementEmail(
+    name: string,
+    email: string,
+    subject: string,
+    html: string,
+  ): Promise<boolean> {
+    return this.sendEmail({
+      to: email,
+      toName: name,
+      subject,
+      html,
+    });
+  }
+
   async sendStartathonAccountSetupInviteEmail(
     email: string,
     teamName: string,

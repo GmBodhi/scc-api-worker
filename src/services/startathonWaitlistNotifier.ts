@@ -1,3 +1,4 @@
+import { claimEmailBudget } from "./emailBudget";
 import { EmailService } from "./emailService";
 
 /**
@@ -7,8 +8,9 @@ import { EmailService } from "./emailService";
  * send keeps the rate below anything receiving providers read as a bulk blast,
  * so a reputation hit here can't spill onto transactional delivery.
  *
- * At 10 per tick on the half-hourly cron, a ~100-person waitlist drains in
- * roughly 5 hours.
+ * This is the per-tick smoothing limit only. The day's hard ceiling is the
+ * shared budget in emailBudget.ts, which this job draws from alongside the
+ * announcement notifier -- the two together can never exceed it.
  */
 const BATCH_SIZE = 10;
 
@@ -64,13 +66,30 @@ export async function notifyStartathonWaitlist(env: Env): Promise<void> {
     return;
   }
 
+  // Claim before sending, and send only what the shared daily budget grants. On
+  // a spent day this returns 0 and the batch is left untouched for tomorrow --
+  // no status is written, so nobody is marked notified for mail that never
+  // left. The inline retry below can spend one message beyond the claim for a
+  // failing recipient; that overshoot is absorbed by the transactional reserve
+  // the budget holds back.
+  const granted = await claimEmailBudget(env, batch.results.length);
+
+  if (granted === 0) {
+    console.log(
+      `Startathon waitlist: daily email budget spent, deferring ${batch.results.length} recipient(s).`,
+    );
+    return;
+  }
+
+  const recipients = batch.results.slice(0, granted);
+
   console.log(
-    `Startathon waitlist: notifying ${batch.results.length} recipient(s).`,
+    `Startathon waitlist: notifying ${recipients.length} recipient(s).`,
   );
 
   const emailService = new EmailService(env.BREVO_API_KEY);
 
-  for (const recipient of batch.results) {
+  for (const recipient of recipients) {
     // One inline retry absorbs a transient Brevo blip without needing any
     // persisted attempt counter. sendEmail returns false rather than throwing.
     let sent = await emailService.sendStartathonRegistrationOpenEmail(
