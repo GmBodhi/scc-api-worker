@@ -11,9 +11,9 @@ export interface TeamStatusBlock {
  * once the leader links a UPI reference (linkPayment). Reads are not
  * gated — only writes.
  *
- * 409 rather than 403 to match how the module already reports actions
- * blocked by team status (see kickMember): the caller is permitted, the
- * team is just in the wrong state.
+ * 409 rather than 403 to match how the module reports actions blocked by
+ * team status (see leaveTeam): the caller is permitted, the team is just
+ * in the wrong state.
  */
 export async function unconfirmedTeamBlock(
   db: D1Database,

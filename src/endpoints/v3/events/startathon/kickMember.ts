@@ -6,7 +6,11 @@ import { handleEndpointError } from "../../../../utils/errorResponse";
 /**
  * POST /api/v3/events/startathon/team/members/:user_id/kick
  * Leader removes a member from their own team. Cannot target the
- * leader themselves (use /team/leave). Locked once 'confirmed'.
+ * leader themselves (use /team/leader to hand over, then /team/leave).
+ *
+ * Allowed at any team status. The ₹100 fee is per-team, not per-head, so
+ * a roster change after payment doesn't disturb the transaction — and
+ * teams need to be able to swap people out right up to the event.
  */
 export class StartathonKickMember extends OpenAPIRoute {
   schema = {
@@ -50,14 +54,6 @@ export class StartathonKickMember extends OpenAPIRoute {
           },
         },
       },
-      "409": {
-        description: "Team is confirmed — roster is locked",
-        content: {
-          "application/json": {
-            schema: ErrorResponse,
-          },
-        },
-      },
       "500": {
         description: "Internal server error",
         content: {
@@ -93,24 +89,6 @@ export class StartathonKickMember extends OpenAPIRoute {
         );
       }
 
-      const team = await c.env.EVENTS_DB.prepare(
-        "SELECT status FROM startathon_teams WHERE team_id = ?",
-      )
-        .bind(user.team_id)
-        .first();
-      if (!team) {
-        return c.json({ success: false, error: "Team not found" }, 500);
-      }
-      if (team.status !== "payment-pending") {
-        return c.json(
-          {
-            success: false,
-            error: "Team is confirmed — roster is locked",
-          },
-          409,
-        );
-      }
-
       const targetUserId = c.req.param("user_id");
 
       const target = await c.env.EVENTS_DB.prepare(
@@ -126,11 +104,18 @@ export class StartathonKickMember extends OpenAPIRoute {
         );
       }
 
-      await c.env.EVENTS_DB.prepare(
-        "UPDATE startathon_users SET team_id = NULL, role = NULL WHERE user_id = ?",
-      )
-        .bind(targetUserId)
-        .run();
+      // Drop their application entry alongside the membership: an
+      // application_members row keyed to a team the user is no longer on
+      // is invisible to every read (the roster query joins out from
+      // startathon_users) but would silently resurface if they rejoined.
+      await c.env.EVENTS_DB.batch([
+        c.env.EVENTS_DB.prepare(
+          "UPDATE startathon_users SET team_id = NULL, role = NULL WHERE user_id = ?",
+        ).bind(targetUserId),
+        c.env.EVENTS_DB.prepare(
+          "DELETE FROM startathon_application_members WHERE team_id = ? AND user_id = ?",
+        ).bind(user.team_id, targetUserId),
+      ]);
 
       console.log("Startathon member kicked:", {
         team_id: user.team_id,

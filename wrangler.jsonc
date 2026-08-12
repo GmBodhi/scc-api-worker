@@ -73,7 +73,7 @@
 		// wall-clock time is unambiguous. Mirrors APPLICATIONS_CLOSE in the
 		// client's src/lib/phase.js, which drives the countdown — if the two
 		// disagree the server wins, so move this one first.
-		"STARTATHON_APPLICATION_CLOSES_AT": "2026-08-12T23:59:59+05:30",
+		"STARTATHON_APPLICATION_CLOSES_AT": "2026-08-13T23:59:59+05:30"
 	},
 	"triggers": {
 		"crons": [

@@ -13,8 +13,17 @@ const PROVIDER_DAILY_CAP = 300;
  * claim budget (blocking a password reset to protect a blast would be
  * backwards). It works by keeping the number bulk jobs may consume below the
  * provider cap, leaving the difference free.
+ *
+ * Cut from 50 to 25 to clear the tail of the 2026-08-06 announcement before
+ * the application deadline. Since transactional mail never claims budget, the
+ * reserve only bites on a day when bulk actually spends its full allowance AND
+ * transactional exceeds what is left -- past that point sends fail at the
+ * provider rather than being queued. 25 is therefore a bet that the busiest
+ * day stays under 25 password resets, invites and payment confirmations
+ * combined. Worth revisiting after the event, when the bulk lists are drained
+ * and the reserve costs nothing to restore.
  */
-const TRANSACTIONAL_RESERVE = 50;
+const TRANSACTIONAL_RESERVE = 25;
 
 /** What all bulk jobs together may send in a UTC day. */
 export const BLAST_DAILY_BUDGET = PROVIDER_DAILY_CAP - TRANSACTIONAL_RESERVE;

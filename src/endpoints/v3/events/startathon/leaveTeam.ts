@@ -5,9 +5,14 @@ import { handleEndpointError } from "../../../../utils/errorResponse";
 
 /**
  * POST /api/v3/events/startathon/team/leave
- * Member: leaves the team (clears their own team_id/role).
- * Leader: deletes the team entirely, freeing every member and
- * cancelling pending invites. Locked once the team is 'confirmed'.
+ * Member: leaves the team (clears their own team_id/role). Allowed at
+ * any status — the ₹100 fee is per-team, so the roster stays editable.
+ *
+ * Leader: there is no "leave" for a leader, only deleting the team
+ * outright, so this is gated on the team being unpaid. A leader of a
+ * confirmed team hands over via POST /team/leader first and then leaves
+ * as an ordinary member; that keeps the payment and the application
+ * attached to a team that still exists.
  */
 export class StartathonLeaveTeam extends OpenAPIRoute {
   schema = {
@@ -35,7 +40,8 @@ export class StartathonLeaveTeam extends OpenAPIRoute {
         },
       },
       "409": {
-        description: "Team is confirmed — roster is locked",
+        description:
+          "Leader of a confirmed team — hand over leadership before leaving",
         content: {
           "application/json": {
             schema: ErrorResponse,
@@ -71,6 +77,26 @@ export class StartathonLeaveTeam extends OpenAPIRoute {
         );
       }
 
+      if (user.role === "member") {
+        // Mirrors kickMember: the membership and the member's application
+        // entry go together, so a stale row can't resurface on rejoin.
+        await c.env.EVENTS_DB.batch([
+          c.env.EVENTS_DB.prepare(
+            "UPDATE startathon_users SET team_id = NULL, role = NULL WHERE user_id = ?",
+          ).bind(user.user_id),
+          c.env.EVENTS_DB.prepare(
+            "DELETE FROM startathon_application_members WHERE team_id = ? AND user_id = ?",
+          ).bind(user.team_id, user.user_id),
+        ]);
+
+        console.log("Startathon member left team:", {
+          user_id: user.user_id,
+          team_id: user.team_id,
+        });
+
+        return c.json({ success: true, message: "You've left the team." });
+      }
+
       const team = await c.env.EVENTS_DB.prepare(
         "SELECT status FROM startathon_teams WHERE team_id = ?",
       )
@@ -84,25 +110,11 @@ export class StartathonLeaveTeam extends OpenAPIRoute {
         return c.json(
           {
             success: false,
-            error: "Team is confirmed — roster is locked",
+            error:
+              "Your team has already paid, so it can't be deleted. Hand leadership to a teammate first, then leave.",
           },
           409,
         );
-      }
-
-      if (user.role === "member") {
-        await c.env.EVENTS_DB.prepare(
-          "UPDATE startathon_users SET team_id = NULL, role = NULL WHERE user_id = ?",
-        )
-          .bind(user.user_id)
-          .run();
-
-        console.log("Startathon member left team:", {
-          user_id: user.user_id,
-          team_id: user.team_id,
-        });
-
-        return c.json({ success: true, message: "You've left the team." });
       }
 
       // Leader: delete the team entirely, free every member, drop invites.
@@ -110,13 +122,22 @@ export class StartathonLeaveTeam extends OpenAPIRoute {
       // FK-references team_id, and any team that applied this team's
       // referral_code still FK-references it via referred_by — both must
       // be cleared before the DELETE or it fails with a FOREIGN KEY
-      // constraint error.
+      // constraint error. The application tables FK-reference team_id
+      // too; an unpaid team can't have written one (those endpoints
+      // require 'confirmed'), but they're cleared here so the batch
+      // stands on its own rather than on that invariant holding forever.
       await c.env.EVENTS_DB.batch([
         c.env.EVENTS_DB.prepare(
           "UPDATE startathon_users SET team_id = NULL, role = NULL WHERE team_id = ?",
         ).bind(user.team_id),
         c.env.EVENTS_DB.prepare(
           "DELETE FROM startathon_invites WHERE team_id = ?",
+        ).bind(user.team_id),
+        c.env.EVENTS_DB.prepare(
+          "DELETE FROM startathon_application_members WHERE team_id = ?",
+        ).bind(user.team_id),
+        c.env.EVENTS_DB.prepare(
+          "DELETE FROM startathon_applications WHERE team_id = ?",
         ).bind(user.team_id),
         c.env.EVENTS_DB.prepare(
           "UPDATE startathon_teams SET referred_by = NULL WHERE referred_by = ?",

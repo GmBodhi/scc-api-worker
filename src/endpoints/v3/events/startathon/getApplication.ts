@@ -100,6 +100,9 @@ export class StartathonGetApplication extends OpenAPIRoute {
           problem_evidence: application.problem_evidence as string,
           deck_url: application.deck_url as string,
           video_url: application.video_url as string,
+          domains: application.domains
+            ? JSON.parse(application.domains as string)
+            : null,
           prior_work: application.prior_work
             ? JSON.parse(application.prior_work as string)
             : null,

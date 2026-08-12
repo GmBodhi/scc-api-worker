@@ -46,11 +46,20 @@ import { StartathonGoogleCallback } from "./events/startathon/googleCallback";
 import { StartathonGoogleCredential } from "./events/startathon/googleCredential";
 import { StartathonLeaveTeam } from "./events/startathon/leaveTeam";
 import { StartathonKickMember } from "./events/startathon/kickMember";
+import { StartathonTransferLeadership } from "./events/startathon/transferLeadership";
 import { StartathonPutApplication } from "./events/startathon/putApplication";
 import { StartathonGetApplication } from "./events/startathon/getApplication";
 import { StartathonPutApplicationMember } from "./events/startathon/putApplicationMember";
 import { StartathonVerifyDriveLink } from "./events/startathon/verifyDriveLink";
 import { StartathonVerifyYoutubeLink } from "./events/startathon/verifyYoutubeLink";
+import { StartathonSrCreateCaller } from "./events/startathon/sr/createCaller";
+import { StartathonSrListCallers } from "./events/startathon/sr/listCallers";
+import { StartathonSrClaimCalls } from "./events/startathon/sr/claimCalls";
+import { StartathonSrListCalls } from "./events/startathon/sr/listCalls";
+import { StartathonSrPutCallFeedback } from "./events/startathon/sr/putCallFeedback";
+import { StartathonSrReleaseCall } from "./events/startathon/sr/releaseCall";
+import { StartathonSrUpdateCaller } from "./events/startathon/sr/updateCaller";
+import { StartathonSrGetMe } from "./events/startathon/sr/getMe";
 import { EmailOpen } from "./events/emailOpen";
 import { EmailClick } from "./events/emailClick";
 // Notifications
@@ -171,6 +180,7 @@ openapi.post(
   StartathonGoogleCredential,
 );
 openapi.post("/events/startathon/team/leave", StartathonLeaveTeam);
+openapi.post("/events/startathon/team/leader", StartathonTransferLeadership);
 openapi.post(
   "/events/startathon/team/members/:user_id/kick",
   StartathonKickMember,
@@ -189,6 +199,25 @@ openapi.post(
   "/events/startathon/links/verify/youtube",
   StartathonVerifyYoutubeLink,
 );
+// Startathon student-relations calling (staff routes, TOKEN-guarded)
+openapi.post("/events/startathon/sr/callers", StartathonSrCreateCaller);
+openapi.get("/events/startathon/sr/callers", StartathonSrListCallers);
+openapi.patch(
+  "/events/startathon/sr/callers/:caller_id",
+  StartathonSrUpdateCaller,
+);
+openapi.get("/events/startathon/sr/me", StartathonSrGetMe);
+openapi.post("/events/startathon/sr/calls/claim", StartathonSrClaimCalls);
+openapi.get("/events/startathon/sr/calls", StartathonSrListCalls);
+openapi.put(
+  "/events/startathon/sr/calls/:team_id/feedback",
+  StartathonSrPutCallFeedback,
+);
+openapi.post(
+  "/events/startathon/sr/calls/:team_id/release",
+  StartathonSrReleaseCall,
+);
+
 openapi.get("/events/email/open", EmailOpen);
 openapi.get("/events/email/click", EmailClick);
 

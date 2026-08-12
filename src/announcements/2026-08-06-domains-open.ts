@@ -14,7 +14,7 @@ import type { Announcement } from "./types";
 export const domainsOpenAnnouncement: Announcement = {
   id: "2026-08-06-domains-open",
   subject: "Startathon 2026: submissions are open, and here are the domains",
-  active: true,
+  active: false,
   includeWaitlist: true,
   render: ({ name, hasAccount }) =>
     getStartathonDomainsEmail({ name, hasAccount }),

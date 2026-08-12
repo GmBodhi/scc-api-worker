@@ -51,6 +51,7 @@ Self-contained account/team/payment system. Own tables (`startathon_teams`, `sta
 - `POST /api/v3/events/startathon/team/invite/:id/cancel` - Leader cancels a pending invite
 - `POST /api/v3/events/startathon/team/join` - Join a team by `join_code`
 - `POST /api/v3/events/startathon/team/leave` - Leave (member) or delete the team (leader)
+- `POST /api/v3/events/startathon/team/leader` - Leader hands the role to a teammate
 - `POST /api/v3/events/startathon/team/members/:user_id/kick` - Leader removes a member
 - `GET /api/v3/events/startathon/invites` - My pending invites
 - `POST /api/v3/events/startathon/invites/:id/accept` + `/decline` - Respond to an invite
@@ -61,6 +62,89 @@ Self-contained account/team/payment system. Own tables (`startathon_teams`, `sta
 - `PUT /api/v3/events/startathon/team/application/members/:user_id` - A member's own details; leader may write any member
 - `POST /api/v3/events/startathon/links/verify/drive` - Is a Drive link readable by an outsider?
 - `POST /api/v3/events/startathon/links/verify/youtube` - Is a YouTube link playable?
+
+#### Student-relations calling (staff routes)
+
+The SR team phones the leaders of confirmed teams and files what came
+back. Two kinds of credential, both in the `Authorization` header, both
+answering **404** when wrong (matching `transactionIngest` — staff routes
+don't confirm their own existence):
+
+- **`SR_TOKEN`** — the organiser/admin key. Registers callers, rotates or
+  deactivates them, reads the whole campaign. Deliberately *cannot* claim
+  teams or file calls (403): a call attributed to "the admin token" would
+  be a hole in the accountability the per-caller tokens exist to provide.
+  A separate secret from `TOKEN` so it's rotatable without breaking the
+  bank-SMS webhook. Fails closed if unset rather than falling back to
+  `TOKEN`. Set with `wrangler secret put SR_TOKEN`.
+- **Per-caller tokens** (`startathon_sr_callers.token`, `sr_…`) — one per
+  volunteer. **The token IS the identity**: the worker resolves it to a
+  caller and `caller_id` is never accepted from the client, so nobody can
+  file a call under a colleague's name, and `GET /calls?caller_id=` is
+  honoured for the admin key alone. Returned once at creation or
+  rotation and never readable again — if lost, rotate.
+
+A lost phone is fixed by rotating that one caller, not the whole team's
+credential. `PATCH /callers/:id` handles both `{rotate:true}` and
+`{active:false}`; deactivating stops the token immediately but leaves
+their filed calls and stats intact, and their open claims simply expire
+back to the pool.
+
+- `POST /api/v3/events/startathon/sr/callers` - Register a caller, mint their token (admin)
+- `PATCH /api/v3/events/startathon/sr/callers/:caller_id` - `{active?, rotate?}` (admin)
+- `GET /api/v3/events/startathon/sr/callers` - Roster + per-caller progress + pool totals
+- `GET /api/v3/events/startathon/sr/me` - Who this caller token belongs to
+- `POST /api/v3/events/startathon/sr/calls/claim` - `{count?}` pulls the next batch
+- `GET /api/v3/events/startathon/sr/calls` - `?state=open|done|all` (own list; admin may pass `caller_id`)
+- `PUT /api/v3/events/startathon/sr/calls/:team_id/feedback` - File the after-call result
+- `POST /api/v3/events/startathon/sr/calls/:team_id/release` - Drop an uncalled claim
+
+Work is divided by **pulling, not assigning**: there is no allocation
+step, so the split self-balances against each caller's actual pace.
+`startathon_sr_calls` has one row per team that is simultaneously the
+claim lock and the feedback record — the row existing means claimed,
+`outcome IS NULL` means claimed-but-not-yet-called.
+
+**Stale claims need no cron.** A claim older than `SR_CLAIM_TTL_MS` (24h)
+that still has no outcome is overwritten by the next caller who pulls, so
+an abandoned list returns to circulation on its own. Race safety comes
+from the conflict branch re-checking eligibility, so two simultaneous
+claims can't land the same team on two lists.
+
+**A `no-answer` goes back in the pool; a `reached` never does.** Nobody
+picked up, so the team still needs calling — but it rests for
+`SR_NO_ANSWER_RETRY_MS` (4h) first, and the claim query orders by
+`COALESCE(called_at, 0)` so untried teams always come first. Without
+that, a released team is instantly re-eligible and, dealing oldest-first,
+lands straight back on the caller who just rang it. `attempts` survives
+re-claiming, so "we've rung them 3 times" is visible on the card.
+
+The pool is `status = 'confirmed'` teams only. Each contact carries the
+leader **and the whole roster** (a caller whose leader doesn't answer needs
+a fallback number without another request) plus `has_application`, since
+"have you submitted yet?" gets asked on every call.
+
+`feedback` is a JSON array of `{question, answer}`, validated for
+structure only — the SR script changes week to week and shouldn't need a
+migration to do it. Nothing inside is SQL-queryable, which is why
+`outcome` (`reached` / `no-answer` / `wrong-number` / `call-back-later`)
+stays a real column: progress tracking never depends on parsing JSON.
+Feedback is a **full replace**, and the endpoint upserts rather than
+demanding a prior claim so an off-queue call can still be filed — the one
+thing it refuses is overwriting another caller's *open* claim (409).
+
+**The roster stays editable at every team status.** Invite, join, accept,
+kick, and a member leaving all work whether the team is `payment-pending` or
+`confirmed` — the ₹100 is a per-team fee, not per-head, so who is on the team
+is independent of the payment. The only thing team status gates is a *leader*
+calling `/team/leave`, because for a leader that call deletes the whole team;
+once paid, that would throw away a real `transaction_ref` and the application.
+A confirmed team's leader exits by `POST /team/leader` (hand over) and then
+leaving as an ordinary member. Kicking or leaving also deletes that person's
+`startathon_application_members` row, so no entry outlives its membership.
+A member who joins after the application was submitted simply has no row yet
+— the roster query renders that as nulls with `updated_at: null`, which is a
+valid state, not an error.
 
 Both link checks are **advisory** — auth-guarded, nothing stored, no other
 endpoint consults them, and `PUT /team/application` does not call them. They
@@ -73,9 +157,13 @@ and cannot distinguish public from unlisted — both are playable, both pass.
 
 The application is the pre-event shortlisting submission (20 teams advance).
 The 5-slide deck and 60s video are the real pitch and are held as URLs, so
-the row stores only what must be queryable plus `problem_evidence` and the
-`prior_work` declaration. Architecture and tech stack are deliberately not
-collected at this stage. Writes to both endpoints close at
+the row stores only what must be queryable plus `problem_evidence`, the
+`domains` the solution falls under, and the `prior_work` declaration.
+Architecture and tech stack are deliberately not collected at this stage.
+`domains` is free text (max 5, JSON array) rather than an enum — the domain
+list shifts between editions, and an ill-fitting enum pushes teams into
+"other", which tells the shortlisting panel nothing. Like `prior_work`, NULL
+means never answered and `[]` means explicitly none. Writes to both endpoints close at
 `STARTATHON_APPLICATION_CLOSES_AT` (a `wrangler.jsonc` var, so the date moves
 without a code deploy); an unset or unparseable value fails closed with a 500.
 

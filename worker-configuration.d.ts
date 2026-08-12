@@ -10,6 +10,7 @@ declare namespace Cloudflare {
 		GOOGLE_REDIRECT_URI: "https://sctcoding.club/auth/google/callback";
 		JWT_SECRET: string;
 		TOKEN: string;
+		SR_TOKEN: string;
 		BREVO_API_KEY: string;
 		GOOGLE_CLIENT_ID: string;
 		GOOGLE_CLIENT_SECRET: string;

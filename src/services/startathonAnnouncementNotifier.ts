@@ -7,12 +7,16 @@ import { EmailService } from "./emailService";
  *
  * This is a smoothing limit, not the safety limit -- the day's real ceiling is
  * enforced by the shared budget in emailBudget.ts, which this job never
- * exceeds. Keeping the per-tick figure well below the daily allowance spreads
- * the blast across hours instead of firing it in one burst, which is what keeps
- * receiving providers from reading it as bulk and downgrading the sender
- * reputation that transactional mail depends on.
+ * exceeds. Note what that means: raising this number does not make a blast
+ * finish sooner, because the budget binds long before the ticks run out (at
+ * 48 ticks a day, even 10 per tick can offer 480 against an allowance of 275).
+ * All it changes is how much of the day the sends are spread over -- 30 spends
+ * the allowance in roughly four hours, 10 spreads it across twelve. Lower is
+ * gentler on the sender reputation that transactional mail depends on; the
+ * only lever that actually shortens a blast is the daily budget itself, which
+ * is pinned to what the provider allows.
  */
-const BATCH_SIZE = 10;
+const BATCH_SIZE = 30;
 
 /**
  * Sends after which a recipient is abandoned.

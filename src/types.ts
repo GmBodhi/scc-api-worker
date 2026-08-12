@@ -856,6 +856,10 @@ export const StartathonJoinTeamRequest = z.object({
   join_code: z.string().min(1).max(20),
 });
 
+export const StartathonTransferLeadershipRequest = z.object({
+  new_leader_id: z.string().min(1),
+});
+
 export const StartathonInviteListItem = z.object({
   invite_id: z.string(),
   team_name: z.string(),
@@ -900,6 +904,9 @@ export const StartathonApplicationRequest = z.object({
   problem_evidence: z.string().min(10).max(1000),
   deck_url: z.string().url(),
   video_url: z.string().url(),
+  // Free text, not an enum — the domain list shifts between editions, and
+  // forcing an ill-fitting solution into "other" tells the panel nothing.
+  domains: z.array(z.string().min(1).max(60)).max(5).optional(),
   prior_work: z.array(StartathonPriorWorkEntry).max(20).optional(),
 });
 
@@ -990,11 +997,153 @@ export const StartathonApplicationResponse = z.object({
       problem_evidence: z.string(),
       deck_url: z.string(),
       video_url: z.string(),
-      // null = never answered, [] = explicitly declared nothing.
+      // Both null = never answered, [] = explicitly declared nothing.
+      domains: z.array(z.string()).nullable(),
       prior_work: z.array(StartathonPriorWorkEntry).nullable(),
       members: z.array(StartathonApplicationMember),
       created_at: z.number(),
       updated_at: z.number().nullable(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+// ---------------------------------------------------------------------------
+// Student-relations calling (TOKEN-guarded staff routes)
+// ---------------------------------------------------------------------------
+
+export const StartathonSrCallOutcome = z.enum([
+  "reached",
+  "no-answer",
+  "wrong-number",
+  "call-back-later",
+]);
+
+// Free-form on purpose: the SR script changes between weeks, and only the
+// structure is validated so reshaping the form needs no migration and no
+// deploy. Nothing inside is SQL-queryable — `outcome` stays a real column
+// so progress tracking never depends on parsing this.
+export const StartathonSrFeedbackEntry = z.object({
+  question: z.string().min(1).max(300),
+  answer: z.string().max(2000),
+});
+
+export const StartathonSrCallerRequest = z.object({
+  name: z.string().min(2).max(100),
+  email: z.string().email().optional(),
+});
+
+// No caller_id in any of these: the token identifies the caller, so accepting
+// one from the client would just reopen the impersonation hole it closes.
+export const StartathonSrClaimRequest = z.object({
+  count: z.number().int().min(1).max(25).optional(),
+});
+
+export const StartathonSrFeedbackRequest = z.object({
+  outcome: StartathonSrCallOutcome,
+  feedback: z.array(StartathonSrFeedbackEntry).max(30).default([]),
+});
+
+export const StartathonSrUpdateCallerRequest = z.object({
+  /** Deactivate someone who's dropped out; their token stops working. */
+  active: z.boolean().optional(),
+  /** Mint a new token, invalidating the old one. For a lost or shared phone. */
+  rotate: z.boolean().optional(),
+});
+
+export const StartathonSrMeResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      caller_id: z.string(),
+      name: z.string(),
+      email: z.string().nullable(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+const StartathonSrContactPerson = z.object({
+  user_id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  phone: z.string().nullable(),
+  college: z.string().nullable(),
+  role: z.enum(["leader", "member"]),
+});
+
+export const StartathonSrContact = z.object({
+  team_id: z.string(),
+  team_name: z.string(),
+  status: z.string(),
+  transaction_ref: z.string().nullable(),
+  leader: StartathonSrContactPerson.nullable(),
+  members: z.array(StartathonSrContactPerson),
+  has_application: z.boolean(),
+  caller_id: z.string(),
+  caller_name: z.string(),
+  claimed_at: z.number(),
+  outcome: StartathonSrCallOutcome.nullable(),
+  feedback: z.array(StartathonSrFeedbackEntry).nullable(),
+  called_at: z.number().nullable(),
+  updated_at: z.number().nullable(),
+  // How many times this team has been rung. Survives re-claiming, so a
+  // no-answer team that comes back round carries its history.
+  attempts: z.number(),
+});
+
+export const StartathonSrContactsResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      claimed: z.number(),
+      contacts: z.array(StartathonSrContact),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const StartathonSrCallerResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      caller_id: z.string(),
+      name: z.string(),
+      email: z.string().nullable(),
+      created_at: z.number(),
+      // Returned ONLY here, at creation and rotation. Never listed, never
+      // readable again — if it's lost, rotate rather than look it up.
+      token: z.string(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+export const StartathonSrCallersResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      // Pool-wide totals, so an organiser can see at a glance whether the
+      // division is even and how much of the list is still untouched.
+      totals: z.object({
+        confirmed_teams: z.number(),
+        claimed: z.number(),
+        called: z.number(),
+        unclaimed: z.number(),
+      }),
+      callers: z.array(
+        z.object({
+          caller_id: z.string(),
+          name: z.string(),
+          email: z.string().nullable(),
+          active: z.boolean(),
+          claimed: z.number(),
+          called: z.number(),
+          pending: z.number(),
+          by_outcome: z.record(z.number()),
+          created_at: z.number(),
+        }),
+      ),
     })
     .optional(),
   error: z.string().optional(),

@@ -21,8 +21,8 @@ import {
  *
  * Full replace: the deck and video carry the pitch, so this row is small
  * enough that "send the whole thing" beats partial-update semantics. That
- * includes prior_work — omitting it stores NULL (never answered) rather
- * than silently preserving a previous declaration.
+ * includes domains and prior_work — omitting either stores NULL (never
+ * answered) rather than silently preserving a previous declaration.
  */
 export class StartathonPutApplication extends OpenAPIRoute {
   schema = {
@@ -155,6 +155,7 @@ export class StartathonPutApplication extends OpenAPIRoute {
         problem_evidence,
         deck_url,
         video_url,
+        domains,
         prior_work,
       } = data.body;
 
@@ -165,13 +166,15 @@ export class StartathonPutApplication extends OpenAPIRoute {
         .first();
 
       const now = Math.floor(Date.now() / 1000);
+      const domainsJson = domains ? JSON.stringify(domains) : null;
       const priorWorkJson = prior_work ? JSON.stringify(prior_work) : null;
 
       if (existing) {
         await c.env.EVENTS_DB.prepare(
           `UPDATE startathon_applications
            SET title = ?, summary = ?, problem_evidence = ?,
-               deck_url = ?, video_url = ?, prior_work = ?, updated_at = ?
+               deck_url = ?, video_url = ?, domains = ?, prior_work = ?,
+               updated_at = ?
            WHERE team_id = ?`,
         )
           .bind(
@@ -180,6 +183,7 @@ export class StartathonPutApplication extends OpenAPIRoute {
             problem_evidence,
             deck_url,
             video_url,
+            domainsJson,
             priorWorkJson,
             now,
             user.team_id,
@@ -189,8 +193,8 @@ export class StartathonPutApplication extends OpenAPIRoute {
         await c.env.EVENTS_DB.prepare(
           `INSERT INTO startathon_applications
              (team_id, title, summary, problem_evidence, deck_url, video_url,
-              prior_work, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              domains, prior_work, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
           .bind(
             user.team_id,
@@ -199,6 +203,7 @@ export class StartathonPutApplication extends OpenAPIRoute {
             problem_evidence,
             deck_url,
             video_url,
+            domainsJson,
             priorWorkJson,
             now,
           )
@@ -221,6 +226,7 @@ export class StartathonPutApplication extends OpenAPIRoute {
             problem_evidence,
             deck_url,
             video_url,
+            domains: domains ?? null,
             prior_work: prior_work ?? null,
             members: members.results.map(mapApplicationMemberRow),
             created_at: existing ? (existing.created_at as number) : now,
