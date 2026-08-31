@@ -634,7 +634,10 @@ export const StartathonWaitlistRequest = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Valid email is required"),
   college: z.string().min(1, "College is required"),
-  phone: z.string().min(10, "Phone number must be at least 10 digits").optional(),
+  phone: z
+    .string()
+    .min(10, "Phone number must be at least 10 digits")
+    .optional(),
 });
 
 export const StartathonWaitlistResponse = z.object({
@@ -692,11 +695,28 @@ export const GoogleOAuthCallbackResponse = z.object({
 export const STARTATHON_TEAM_FEE = 100;
 export const STARTATHON_TEAM_REFERRAL_FEE = 90;
 
+// Selection fee: ₹250 per head, charged once a team is shortlisted. Unlike the
+// team fee this is per person, and one transfer may cover several teammates —
+// so the valid amounts are 250 x 1..TEAM_CAP and nothing between.
+export const STARTATHON_SELECTION_FEE = 250;
+export const STARTATHON_TEAM_CAP = 4;
+export const STARTATHON_SELECTION_AMOUNTS = Array.from(
+  { length: STARTATHON_TEAM_CAP },
+  (_, i) => STARTATHON_SELECTION_FEE * (i + 1),
+);
+
 export const StartathonParticipant = z.object({
   user_id: z.string(),
   name: z.string(),
   email: z.string(),
   role: z.enum(["leader", "member"]),
+  // Selection-fee state. Absent/null means nobody has filed a reference for
+  // this member yet — an unpaid member, not an error.
+  selection_payment_status: z.enum(["submitted", "confirmed"]).nullable(),
+  selection_transaction_ref: z.string().nullable(),
+  // Who filed it. Differs from user_id whenever a teammate paid in bulk, which
+  // is what lets the client say "your leader paid for you".
+  selection_paid_by: z.string().nullable(),
 });
 
 export const StartathonLoginRequest = z.object({
@@ -765,8 +785,30 @@ export const StartathonTeamResponse = z.object({
       status: z.string(),
       transaction_ref: z.string().nullable(),
       created_at: z.number(),
+      // Per head, in rupees. Sent whatever the team's status, so the client
+      // never has to hardcode it.
+      selection_fee: z.number(),
+      // Raw shortlisting outcome, for anything that needs to tell a waitlisted
+      // team from an unpicked one. `status` above already folds 'shortlisted'
+      // into 'selected'.
+      shortlist_status: z.enum(["shortlisted", "waitlisted"]).nullable(),
       your_role: z.enum(["leader", "member"]),
       members: z.array(StartathonParticipant),
+      // The caller's own selection-fee payments. Their payment_ids are what a
+      // client sends back to edit one, since a payer may hold more than one.
+      my_selection_payments: z.array(
+        z.object({
+          payment_id: z.string(),
+          transaction_ref: z.string(),
+          amount: z.number(),
+          status: z.enum(["submitted", "confirmed"]),
+          submitted_at: z.number(),
+          confirmed_at: z.number().nullable(),
+          created_at: z.number().nullable(),
+          updated_at: z.number().nullable(),
+          covers: z.array(z.string()),
+        }),
+      ),
       invites: z.array(StartathonTeamInvite),
       referral_code: z.string(),
       referred_by: z.string().nullable(),
@@ -803,6 +845,71 @@ export const StartathonUpdateMeRequest = z.object({
 
 export const StartathonPaymentRequest = z.object({
   transaction_id: z.string().min(1),
+});
+
+export const StartathonSelectionPaymentRequest = z.object({
+  transaction_id: z.string().min(1),
+  // Whom this transfer pays for, by user_id. Omitted means the caller alone.
+  //
+  // Explicit rather than inferred from the amount: ₹500 in a four-person team
+  // cannot say which two it covers. The amount is then required to equal
+  // ₹250 x covers.length, so the list and the money have to agree.
+  covers: z.array(z.string().min(1)).min(1).max(STARTATHON_TEAM_CAP).optional(),
+  // Which of the caller's own payments to rewrite. Omitted opens a new one,
+  // except for the plain "I mistyped the reference" resend — see resolveTarget
+  // in selectionPayment.ts. Needed because a payer can hold several payments:
+  // their own share and a teammate's are separate transfers, not one edit.
+  payment_id: z.string().min(1).optional(),
+});
+
+export const StartathonLogisticsMemberRequest = z.object({
+  // Every field optional and nullable: this is a full replace, and clearing an
+  // answer has to be expressible. Omitted and null both mean "no answer".
+  food_preference: z.enum(["veg", "non-veg"]).nullable().optional(),
+  dietary_notes: z.string().max(300).nullable().optional(),
+  travel_mode: z
+    .enum(["train", "bus", "car", "flight", "own", "other"])
+    .nullable()
+    .optional(),
+  // Unix seconds. Paired with arrival_note because people know the day long
+  // before the time.
+  arrival_at: z.number().int().positive().nullable().optional(),
+  arrival_note: z.string().max(200).nullable().optional(),
+  needs_travel_guidance: z.boolean().optional(),
+  guidance_note: z.string().max(300).nullable().optional(),
+});
+
+export const StartathonLogisticsMember = z.object({
+  user_id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  role: z.enum(["leader", "member"]),
+  food_preference: z.enum(["veg", "non-veg"]).nullable(),
+  dietary_notes: z.string().nullable(),
+  travel_mode: z
+    .enum(["train", "bus", "car", "flight", "own", "other"])
+    .nullable(),
+  arrival_at: z.number().nullable(),
+  arrival_note: z.string().nullable(),
+  needs_travel_guidance: z.boolean(),
+  guidance_note: z.string().nullable(),
+  // Null for a member who has never answered — the roster still lists them,
+  // which is the point: the gaps are the work.
+  updated_by: z.string().nullable(),
+  updated_at: z.number().nullable(),
+});
+
+export const StartathonLogisticsResponse = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      team_id: z.string(),
+      team_name: z.string(),
+      your_role: z.enum(["leader", "member"]),
+      members: z.array(StartathonLogisticsMember),
+    })
+    .optional(),
+  error: z.string().optional(),
 });
 
 export const StartathonSignupRequest = z.object({

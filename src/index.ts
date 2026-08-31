@@ -37,11 +37,12 @@ openapi.route("/api/v3", v3);
 // Export the Worker with both HTTP and scheduled handlers
 export default {
   fetch: app.fetch,
-  scheduled: async (
-    _event: ScheduledEvent,
-    env: Env,
-    ctx: ExecutionContext,
-  ) => {
-    ctx.waitUntil(handleScheduled(env));
+  scheduled: async (event: ScheduledEvent, env: Env, ctx: ExecutionContext) => {
+    // The cron expression is passed through because the two schedules do
+    // different work: the five-minute one runs only the selection-payment
+    // sweep, while the half-hourly one runs everything. Without the
+    // distinction the email jobs would fire six times as often against the
+    // same daily send budget.
+    ctx.waitUntil(handleScheduled(env, event.cron));
   },
 };

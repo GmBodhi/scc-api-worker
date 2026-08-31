@@ -41,6 +41,9 @@ import { StartathonDeclineInvite } from "./events/startathon/declineInvite";
 import { StartathonJoinTeam } from "./events/startathon/joinTeam";
 import { StartathonTransactionIngest } from "./events/startathon/transactionIngest";
 import { StartathonLinkPayment } from "./events/startathon/linkPayment";
+import { StartathonSelectionPayment } from "./events/startathon/selectionPayment";
+import { StartathonGetLogistics } from "./events/startathon/getLogistics";
+import { StartathonPutLogisticsMember } from "./events/startathon/putLogisticsMember";
 import { StartathonGoogleInitiate } from "./events/startathon/googleInitiate";
 import { StartathonGoogleCallback } from "./events/startathon/googleCallback";
 import { StartathonGoogleCredential } from "./events/startathon/googleCredential";
@@ -163,13 +166,20 @@ openapi.post(
 );
 openapi.get("/events/startathon/invites", StartathonListInvites);
 openapi.post("/events/startathon/invites/:id/accept", StartathonAcceptInvite);
-openapi.post(
-  "/events/startathon/invites/:id/decline",
-  StartathonDeclineInvite,
-);
+openapi.post("/events/startathon/invites/:id/decline", StartathonDeclineInvite);
 openapi.post("/events/startathon/team/join", StartathonJoinTeam);
 openapi.post("/events/startathon/transaction", StartathonTransactionIngest);
 openapi.post("/events/startathon/payment", StartathonLinkPayment);
+openapi.post(
+  "/events/startathon/payment/selection",
+  StartathonSelectionPayment,
+);
+openapi.get("/events/startathon/team/logistics", StartathonGetLogistics);
+openapi.put(
+  "/events/startathon/team/logistics/members/:user_id",
+  StartathonPutLogisticsMember,
+);
+
 openapi.get("/events/startathon/auth/google", StartathonGoogleInitiate);
 openapi.get(
   "/events/startathon/auth/google/callback",

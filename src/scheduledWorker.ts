@@ -1,5 +1,9 @@
 import { EmailService } from "./services/emailService";
 import { notifyStartathonAnnouncements } from "./services/startathonAnnouncementNotifier";
+import { notifyStartathonResults } from "./services/startathonResultNotifier";
+import { notifyStartathonSelectionFee } from "./services/startathonSelectionFeeNotifier";
+import { sweepStartathonSelectionPayments } from "./services/startathonSelectionPayments";
+import { syncStartathonRosterSheet } from "./services/startathonRosterSheet";
 import { notifyStartathonWaitlist } from "./services/startathonWaitlistNotifier";
 
 interface Student {
@@ -9,10 +13,55 @@ interface Student {
   createdAt: string;
 }
 
-export async function handleScheduled(env: Env): Promise<void> {
+/** The fast schedule, which runs the selection sweep and nothing else. */
+export const SELECTION_SWEEP_CRON = "*/5 * * * *";
+
+export async function handleScheduled(env: Env, cron?: string): Promise<void> {
+  // Runs on both schedules: on the fast one it is the only job, on the slow
+  // one it is a second chance for anything the five-minute pass missed.
+  try {
+    await sweepStartathonSelectionPayments(env);
+  } catch (error) {
+    console.error("Error in Startathon selection payment sweep:", error);
+  }
+
+  // Everything below is half-hourly work. The fast schedule stops here: these
+  // jobs draw on a shared daily email budget that is sized for 48 ticks a day,
+  // not 288.
+  if (cron === SELECTION_SWEEP_CRON) {
+    return;
+  }
+
   // Each job is isolated: the follow-up check returns early in several places
   // and either job throwing must not stop the other from running.
   await handleFollowUpEmails(env);
+
+  // Ahead of the other blast jobs because they share one daily email budget and
+  // this one is the only one that is time-critical: a shortlisting result that
+  // arrives days late is worse than a waitlist or announcement mail that does.
+  try {
+    await notifyStartathonResults(env);
+  } catch (error) {
+    console.error("Error in Startathon results notifier:", error);
+  }
+
+  // The organisers' sheet, refreshed wholesale. This is the only path that
+  // catches a payment confirmed by the bank webhook or by the sweep, since
+  // neither runs inside a request that could have pushed the change itself.
+  try {
+    await syncStartathonRosterSheet(env);
+  } catch (error) {
+    console.error("Error syncing Startathon roster sheet:", error);
+  }
+
+  // Ahead of the waitlist and announcement jobs for the same reason the results
+  // blast is: it carries a deadline, and a bill that arrives after the date it
+  // names is worse than a late announcement.
+  try {
+    await notifyStartathonSelectionFee(env);
+  } catch (error) {
+    console.error("Error in Startathon selection fee notifier:", error);
+  }
 
   try {
     await notifyStartathonWaitlist(env);

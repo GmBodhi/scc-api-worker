@@ -77,10 +77,7 @@ export class StartathonKickMember extends OpenAPIRoute {
       const user = authResult.user;
 
       if (!user.team_id) {
-        return c.json(
-          { success: false, error: "You don't have a team" },
-          404,
-        );
+        return c.json({ success: false, error: "You don't have a team" }, 404);
       }
       if (user.role !== "leader") {
         return c.json(
@@ -108,6 +105,11 @@ export class StartathonKickMember extends OpenAPIRoute {
       // application_members row keyed to a team the user is no longer on
       // is invisible to every read (the roster query joins out from
       // startathon_users) but would silently resurface if they rejoined.
+      // An unconfirmed selection-fee claim on this person goes too:
+      // nothing has been paid for them yet, and a stale cover row would
+      // block them from ever being paid for again, here or on another
+      // team. A *confirmed* cover row is left alone — real money was
+      // received against that seat, and the ledger should keep saying so.
       await c.env.EVENTS_DB.batch([
         c.env.EVENTS_DB.prepare(
           "UPDATE startathon_users SET team_id = NULL, role = NULL WHERE user_id = ?",
@@ -115,6 +117,13 @@ export class StartathonKickMember extends OpenAPIRoute {
         c.env.EVENTS_DB.prepare(
           "DELETE FROM startathon_application_members WHERE team_id = ? AND user_id = ?",
         ).bind(user.team_id, targetUserId),
+        c.env.EVENTS_DB.prepare(
+          `DELETE FROM startathon_selection_payment_covers
+           WHERE user_id = ?
+             AND payment_id IN (
+             SELECT payment_id FROM startathon_selection_payments WHERE status = 'submitted'
+             )`,
+        ).bind(targetUserId),
       ]);
 
       console.log("Startathon member kicked:", {

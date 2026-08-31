@@ -2,16 +2,26 @@ import { OpenAPIRoute } from "chanfana";
 import {
   type AppContext,
   RawTransaction,
+  STARTATHON_SELECTION_AMOUNTS,
   STARTATHON_TEAM_FEE,
   STARTATHON_TEAM_REFERRAL_FEE,
 } from "../../../../types";
 import { parseTransactionHDFC } from "../../../../services/transaction";
+import { confirmSelectionPaymentForRef } from "../../../../services/startathonSelectionPayments";
 
 /**
  * POST /api/v3/events/startathon/transaction
  * Webhook ingest for raw bank SMS. Guarded by the shared TOKEN header.
- * Accepts ₹100 (flat team fee) or ₹90 (referral discount) transactions;
- * stores as 'unused'.
+ *
+ * Accepts the ₹100 flat team fee, the ₹90 referral price, and the selection
+ * fee at ₹250 per head up to a full team of four. The two fee scales never
+ * collide, so a reference stored here can only ever be spent as the kind of
+ * payment its amount says it is.
+ *
+ * Stored as 'unused', then claimed by whichever endpoint links it. For a
+ * selection payment the link usually already exists — the participant files
+ * their reference the moment they pay, and the SMS follows — so this handler
+ * confirms it on the spot rather than leaving it to the sweep.
  */
 export class StartathonTransactionIngest extends OpenAPIRoute {
   schema = {
@@ -45,10 +55,14 @@ export class StartathonTransactionIngest extends OpenAPIRoute {
 
     const extracted = parseTransactionHDFC(rawTxn);
 
-    if (
-      !extracted ||
-      (![1, 90, 100].includes(extracted.amount))
-    ) {
+    const acceptedAmounts = [
+      1,
+      STARTATHON_TEAM_REFERRAL_FEE,
+      STARTATHON_TEAM_FEE,
+      ...STARTATHON_SELECTION_AMOUNTS,
+    ];
+
+    if (!extracted || !acceptedAmounts.includes(extracted.amount)) {
       c.status(400);
       return c.json({ error: "Invalid transaction data" });
     }
@@ -77,6 +91,18 @@ export class StartathonTransactionIngest extends OpenAPIRoute {
     }
 
     console.log("Startathon transaction stored:", extracted);
+
+    // Non-fatal: the five-minute sweep picks up anything this misses, and a
+    // failure here must not make the webhook retry a transaction already
+    // stored.
+    if (STARTATHON_SELECTION_AMOUNTS.includes(extracted.amount)) {
+      try {
+        await confirmSelectionPaymentForRef(c.env.EVENTS_DB, extracted.upiRef);
+      } catch (matchError) {
+        console.error("Startathon selection match error:", matchError);
+      }
+    }
+
     c.status(201);
     return c.json({ success: true, ref: extracted.upiRef });
   }

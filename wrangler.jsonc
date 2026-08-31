@@ -73,11 +73,67 @@
 		// wall-clock time is unambiguous. Mirrors APPLICATIONS_CLOSE in the
 		// client's src/lib/phase.js, which drives the countdown — if the two
 		// disagree the server wins, so move this one first.
-		"STARTATHON_APPLICATION_CLOSES_AT": "2026-08-13T23:59:59+05:30"
+		"STARTATHON_APPLICATION_CLOSES_AT": "2026-08-14T19:05:00+05:30",
+		// The twenty shortlisted teams, by startathon_teams.team_id.
+		//
+		// This list decides which of the two result emails a participant gets:
+		// on it means the accepted copy, submitted-but-absent means the
+		// rejected one. It lives here rather than in a table because the
+		// shortlist is a one-off human decision, not application state — and
+		// here it is reviewable in a diff before the deploy that sends on it.
+		//
+		// The notifier refuses to send if any id here has no application row,
+		// so a typo stops the blast instead of quietly rejecting that team.
+		"STARTATHON_SHORTLISTED_TEAM_IDS": [
+			"ST_1784653435213_S4LUJB",
+			"ST_1785126984908_JVTZLP",
+			"ST_1785204014894_MNEU0M",
+			"ST_1784473517764_DO7DSI",
+			"ST_1784451551434_RHZ1IQ",
+			"ST_1784478906474_WWNUK3",
+			"ST_1785867078668_7XK7VN",
+			"ST_1785688628576_P1KFOH",
+			"ST_1784545565533_0OR9YK",
+			"ST_1786004740467_79XOWU",
+			"ST_1784457715724_7KBKFT",
+			"ST_1785164983618_ENCANA",
+			"ST_1785341114529_LFD6A2",
+			"ST_1784638317569_QXQEWK",
+			"ST_1785867651251_5X9QPB",
+			"ST_1784730229425_AVNPNH",
+			"ST_1785126911376_1GXZ38",
+			"ST_1785903344869_BL0OIH",
+			"ST_1784478677834_129EM9",
+			"ST_1784448922398_M5FJ1L"
+		],
+		// The ten standby teams, by startathon_teams.team_id.
+		//
+		// They get a third email: not shortlisted, but next in line if one of
+		// the twenty withdraws. Order here carries no meaning: the notifier
+		// only asks whether an id is present, so resequencing this list does
+		// not resequence who gets called first.
+		//
+		// A team on both lists stops the blast rather than being resolved by
+		// precedence: which email it would get is not something to leave to
+		// evaluation order.
+		"STARTATHON_WAITLISTED_TEAM_IDS": [
+			"ST_1784712839488_LMMKWS",
+			"ST_1784556528828_CRLTB1",
+			"ST_1785409438505_L2HWL0",
+			"ST_1786544677610_3TQKHQ",
+			"ST_1785477234080_TCEO1I",
+			"ST_1786383955413_WTQ8OP",
+			"ST_1785863609035_IQPHLA"
+		]
 	},
 	"triggers": {
 		"crons": [
-			"*/30 * * * *"
+			"*/30 * * * *",
+			// Selection-fee sweep only. src/scheduledWorker.ts branches on this
+			// exact expression, so changing it here without changing
+			// SELECTION_SWEEP_CRON there turns every email blast job into a
+			// five-minute job.
+			"*/5 * * * *"
 		],
 	},
 	"kv_namespaces": [
